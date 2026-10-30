@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="html-root">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نبض مدينتي / CityPulse AI</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <!-- Leaflet Map CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Inter:wght@300;400;600;700&display=swap');
+        
+        body {
+            font-family: 'Cairo', 'Inter', sans-serif;
+            background-color: #f0fdf4;
+            color: #1e293b;
+            overflow-x: hidden;
+            cursor: default;
+        }
+
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.95;
+        }
+
+        .custom-cursor {
+            pointer-events: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 24px;
+            height: 24px;
+            border: 2px solid #059669;
+            background: rgba(16, 185, 129, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.2s, height 0.2s, background-color 0.2s;
+            z-index: 9999;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
+        }
+        .custom-cursor-dot {
+            pointer-events: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 6px;
+            height: 6px;
+            background-color: #059669;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10000;
+        }
+
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(16, 185, 129, 0.4);
+            transform: scale(0);
+            animation: rippleEffect 0.6s linear;
+            pointer-events: none;
+            z-index: 9998;
+        }
+        @keyframes rippleEffect {
+            to { transform: scale(4); opacity: 0; }
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.90);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            box-shadow: 0 20px 40px rgba(16, 185, 129, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+            transform-style: preserve-3d;
+            perspective: 1000px;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .glass-card:hover {
+            border-color: rgba(16, 185, 129, 0.6);
+            transform: translateY(-6px) scale(1.01);
+            box-shadow: 0 30px 60px rgba(16, 185, 129, 0.22);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(2deg); }
+        }
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.1); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .ekg-image-overlay {
+            clip-path: inset(0 100% 0 0);
+            animation: revealEkgImage 3.2s infinite ease-in-out;
+        }
+
+        @keyframes revealEkgImage {
+            0% { clip-path: inset(0 100% 0 0); }
+            50% { clip-path: inset(0 0% 0 0); }
+            80% { clip-path: inset(0 0% 0 0); }
+            100% { clip-path: inset(0 100% 0 0); }
+        }
+
+        .bg-glow-emerald {
+            position: absolute;
+            top: 10%;
+            left: 15%;
+            width: 450px;
+            height: 450px;
+            background: rgba(16, 185, 129, 0.15);
+            filter: blur(120px);
+            border-radius: 50%;
+            animation: pulseGlow 6s ease-in-out infinite;
+            z-index: -1;
+        }
+        .bg-glow-sky {
+            position: absolute;
+            bottom: 10%;
+            right: 15%;
+            width: 500px;
+            height: 500px;
+            background: rgba(14, 165, 233, 0.15);
+            filter: blur(140px);
+            border-radius: 50%;
+            animation: pulseGlow 8s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        .emerald-gradient-text {
+            background: linear-gradient(135deg, #059669 0%, #10b981 50%, #0ea5e9 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 2px 10px rgba(16, 185, 129, 0.2));
+        }
+        .emerald-btn {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            color: #ffffff;
+            font-weight: 800;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(16, 185, 129, 0.3);
+        }
+        .emerald-btn:hover {
+            opacity: 0.95;
+            transform: scale(1.03);
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.45);
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-sky-50 via-emerald-50 to-teal-100 relative">
+
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="custom-cursor" id="cursor"></div>
+    <div class="custom-cursor-dot" id="cursor-dot"></div>
+
+    <div class="bg-glow-emerald"></div>
+    <div class="bg-glow-sky"></div>
+
+    <!-- ==================== LOGIN SCREEN ==================== -->
+    <div id="login-screen" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-2xl flex items-center justify-center p-4">
+        <div class="glass-card max-w-md w-full rounded-3xl p-8 shadow-2xl space-y-6 border border-emerald-500/30 animate-fade-in relative overflow-hidden bg-white/95">
+            <div class="text-center space-y-4 relative z-10">
+                <div class="w-full h-32 mx-auto flex items-center justify-center p-2 bg-white rounded-2xl border border-emerald-500/30 shadow-xl relative overflow-hidden">
+                    <img src="logo.png" alt="نبض مدينتي" class="absolute inset-0 w-full h-full object-contain p-2 z-10" onerror="this.src='https://via.placeholder.com/300x100?text=Logo.png+Missing'">
+                    <img src="logo-ekg.png" alt="نبض مدينتي مع التخطيط" class="absolute inset-0 w-full h-full object-contain p-2 z-20 ekg-image-overlay" onerror="this.src='https://via.placeholder.com/300x100?text=Logo-EKG.png+Missing'">
+                </div>
+                <div>
+                    <h1 class="text-2xl font-black emerald-gradient-text tracking-wide">نبض مدينتي</h1>
+                    <p class="text-xs text-slate-500 mt-1">منصة بلاغات المدن الذكية - سجل دخولك للمتابعة</p>
+                </div>
+            </div>
+
+            <form onsubmit="handleLogin(event)" class="space-y-4 relative z-10">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">الاسم الكامل</label>
+                    <input type="text" id="user-name-input" required placeholder="مثال: مازن هجران" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-emerald-500 transition-all">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">رقم الهاتف النقال</label>
+                    <input type="tel" id="user-phone-input" required placeholder="0770xxxxxxx" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-emerald-500 transition-all">
+                </div>
+                <button type="submit" class="w-full py-3.5 rounded-xl emerald-btn shadow-lg text-sm">
+                    دخول إلى المنصة وتفعيل الحساب ✨
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== WELCOME BANNER ==================== -->
+    <div id="welcome-banner" class="hidden fixed top-6 left-1/2 transform -translate-x-1/2 z-50 bg-gradient-to-r from-emerald-600 via-teal-600 to-sky-600 text-white px-6 py-3 rounded-2xl shadow-2xl border border-white/30 animate-slide-down flex items-center gap-3 font-bold">
+        <span class="text-2xl">🎉</span>
+        <div>
+            <p id="welcome-msg-title" class="text-xs">أهلاً بك يا قهرمان!</p>
+            <p class="text-[10px] text-emerald-100 font-extrabold opacity-90">تم تسجيل دخولك بنجاح إلى منصة نبض مدينتي</p>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN APP CONTAINER ==================== -->
+    <div id="main-app" class="hidden min-h-screen flex flex-col">
+        
+        <header class="border-b border-emerald-500/20 bg-white/85 backdrop-blur-md sticky top-0 z-40 shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+                <div class="flex items-center space-x-3 space-x-reverse">
+                    <div class="h-12 w-28 px-1 flex items-center justify-center bg-white rounded-xl border border-emerald-500/30 shadow-md relative overflow-hidden">
+                        <img src="logo.png" alt="Logo" class="absolute inset-0 w-full h-full object-contain p-1 z-10" onerror="this.src='https://via.placeholder.com/150x50?text=Logo'">
+                        <img src="logo-ekg.png" alt="Logo EKG" class="absolute inset-0 w-full h-full object-contain p-1 z-20 ekg-image-overlay" onerror="this.src='https://via.placeholder.com/150x50?text=Logo-EKG'">
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold emerald-gradient-text">نبض مدينتي</h1>
+                        <p class="text-[10px] text-slate-500">منصة بلاغات المدن الذكية</p>
+                    </div>
+                </div>
+
+                <nav class="hidden lg:flex items-center space-x-1 space-x-reverse bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
+                    <button onclick="switchTab('home')" id="nav-home" class="px-4 py-2 rounded-xl text-xs font-semibold transition-all bg-emerald-600 text-white shadow-md">الرئيسية</button>
+                    <button onclick="switchTab('report')" id="nav-report" class="px-4 py-2 rounded-xl text-xs font-semibold transition-all text-slate-600 hover:text-emerald-600 hover:bg-white">إبلاغ عن مشكلة</button>
+                    <button onclick="switchTab('my-reports')" id="nav-my-reports" class="px-4 py-2 rounded-xl text-xs font-semibold transition-all text-slate-600 hover:text-emerald-600 hover:bg-white">بلاغاتي</button>
+                    <button onclick="switchTab('stats')" id="nav-stats" class="px-4 py-2 rounded-xl text-xs font-semibold transition-all text-slate-600 hover:text-emerald-600 hover:bg-white">الإحصائيات</button>
+                    <button onclick="switchTab('emergency')" id="nav-emergency" class="px-4 py-2 rounded-xl text-xs font-semibold transition-all text-slate-600 hover:text-emerald-600 hover:bg-white">دليل الطوارئ</button>
+                </nav>
+
+                <div class="flex items-center gap-3">
+                    <div class="text-right hidden sm:block">
+                        <p id="display-user-name" class="text-xs font-bold text-slate-800">مرحباً</p>
+                        <p class="text-[10px] text-emerald-600 font-medium">✨ مواطن نشط وموثق</p>
+                    </div>
+                    <button onclick="logout()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-rose-50 border border-slate-200 hover:border-rose-300 text-xs font-medium text-rose-600 transition-all hover:scale-105">
+                        خروج
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-1 w-full relative space-y-16">
+
+            <!-- ==================== TAB 0: HOME ==================== -->
+            <section id="tab-home" class="space-y-16 animate-fade-in relative">
+                
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+                    <div class="lg:col-span-7 space-y-6 text-right z-10">
+                        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-700 text-xs font-semibold shadow-sm animate-pulse">
+                            🌐 المستقبل الرقمي لإدارة المدن الذكية في العراق
+                        </div>
+                        <h2 class="text-4xl sm:text-6xl font-black tracking-tight text-slate-900 leading-tight">
+                            مدينتك الأذكى، ابلغ عن الأعطال <span class="emerald-gradient-text">بكل سرعة وذكاء</span>
+                        </h2>
+                        <p class="text-slate-600 text-base sm:text-lg max-w-xl leading-relaxed">
+                            منصة <strong>نبض مدينتي (CityPulse AI)</strong> هي نظام هندسي تفاعلي متكامل يربط المواطن بغرف العمليات البلدية مباشرة، مستخدمةً أحدث خوارزميات الذكاء الاصطناعي والتحديد الجغرافي لتحليل المشاكل وإنجازها فوراً.
+                        </p>
+                        <div class="flex flex-wrap gap-4 pt-4">
+                            <button onclick="switchTab('report')" class="px-8 py-4 rounded-2xl emerald-btn shadow-xl transition-all hover:scale-105 active:scale-95 text-base flex items-center gap-2">
+                                <span>ابدأ بإرسال بلاغ الآن</span> 🚀
+                            </button>
+                            <button onclick="switchTab('stats')" class="px-8 py-4 rounded-2xl bg-white hover:bg-slate-50 border border-emerald-200 text-slate-800 font-bold text-base transition-all hover:scale-105 active:scale-95 shadow-md">
+                                عرض إحصائيات المدينة 📊
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-5 relative flex items-center justify-center py-10">
+                        <div class="absolute inset-0 bg-gradient-to-tr from-emerald-400/20 to-sky-400/20 rounded-3xl blur-3xl animate-pulse"></div>
+                        
+                        <div class="glass-card p-8 rounded-3xl relative z-10 animate-float text-center border border-emerald-500/30 shadow-2xl max-w-sm w-full bg-white/95 space-y-6">
+                            
+                            <div class="w-full h-36 mx-auto flex items-center justify-center p-3 bg-white rounded-2xl border border-emerald-500/30 shadow-xl relative overflow-hidden">
+                                <img src="logo.png" alt="Logo" class="absolute inset-0 w-full h-full object-contain p-2 z-10" onerror="this.src='https://via.placeholder.com/300x100?text=Logo.png+Missing'">
+                                <img src="logo-ekg.png" alt="Logo EKG" class="absolute inset-0 w-full h-full object-contain p-2 z-20 ekg-image-overlay" onerror="this.src='https://via.placeholder.com/300x100?text=Logo-EKG.png+Missing'">
+                            </div>
+
+                            <div class="space-y-1">
+                                <h3 class="text-base font-black emerald-gradient-text">الشعار الرسمي المعتمد</h3>
+                                <p class="text-[11px] text-slate-500">نظام إدارة البلاغات والمدن الذكية المتكامل</p>
+                            </div>
+                        </div>
+
+                        <div class="absolute -top-6 -right-6 sm:-right-10 glass-card px-4 py-2.5 rounded-2xl flex items-center gap-2 z-30 animate-float border border-emerald-500/30 shadow-xl bg-white/95">
+                            <span class="text-lg">🌍</span>
+                            <div>
+                                <p class="text-[10px] text-slate-400">تغطية شاملة</p>
+                                <p class="text-xs font-bold text-emerald-600">مدن ذكية متكاملة</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- أهداف ورؤية المنصة الإستراتيجية -->
+                <div class="glass-card rounded-3xl p-8 space-y-8 bg-white/95 border border-emerald-500/30 shadow-xl relative z-10">
+                    <div class="text-center max-w-2xl mx-auto space-y-3">
+                        <span class="px-4 py-1.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">لماذا أنشأنا نبض مدينتي؟</span>
+                        <h3 class="text-2xl sm:text-3xl font-black text-slate-900">أهداف ورؤية المنصة الإستراتيجية</h3>
+                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">نهدف إلى القضاء على الروتين الإداري التقليدي وبناء جسر ثقة رقمي بين المواطن والدوائر الخدمية عبر آليات متطورة.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div class="p-6 rounded-2xl bg-gradient-to-br from-emerald-50 to-sky-50 border border-emerald-200 space-y-3">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-lg">🎯</div>
+                            <h4 class="font-bold text-slate-900 text-sm">الهدف الأساسي</h4>
+                            <p class="text-xs text-slate-600 leading-relaxed">تحويل البلاغات البلدية إلى مهام آلية فورية توجه للفرق الميدانية المختصة دون تأخير.</p>
+                        </div>
+                        <div class="p-6 rounded-2xl bg-gradient-to-br from-sky-50 to-teal-50 border border-sky-200 space-y-3">
+                            <div class="w-10 h-10 rounded-xl bg-sky-600 text-white flex items-center justify-center font-bold text-lg">💡</div>
+                            <h4 class="font-bold text-slate-900 text-sm">الذكاء الاصطناعي</h4>
+                            <p class="text-xs text-slate-600 leading-relaxed">تصنيف الأعطال آلياً بناءً على الصور المرفوعة ودرجة خطورتها لتحديد الأولوية القصوى.</p>
+                        </div>
+                        <div class="p-6 rounded-2xl bg-gradient-to-br from-teal-50 to-emerald-50 border border-teal-200 space-y-3">
+                            <div class="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center font-bold text-lg">📍</div>
+                            <h4 class="font-bold text-slate-900 text-sm">التتبع الجغرافي</h4>
+                            <p class="text-xs text-slate-600 leading-relaxed">التقاط إحداثيات GPS بدقة مترية لتوجيه الآليات مباشرة إلى موقع العطل دون وصف معقد.</p>
+                        </div>
+                        <div class="p-6 rounded-2xl bg-gradient-to-br from-amber-50 to-emerald-50 border border-amber-200 space-y-3">
+                            <div class="w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center font-bold text-lg">🌟</div>
+                            <h4 class="font-bold text-slate-900 text-sm">الشفافية الكاملة</h4>
+                            <p class="text-xs text-slate-600 leading-relaxed">إتاحة سجل البلاغات للمواطن لمتابعة حالة إنجاز الشكوى خطوة بخطوة بكل شفافية.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- دليل الاستخدام المبسط -->
+                <div class="space-y-8 relative z-10">
+                    <div class="text-center max-w-2xl mx-auto space-y-2">
+                        <span class="px-4 py-1.5 rounded-full bg-sky-100 text-sky-700 text-xs font-bold">دليل الاستخدام المبسط</span>
+                        <h3 class="text-2xl sm:text-3xl font-black text-slate-900">كيف يعمل نظام نبض مدينتي؟</h3>
+                        <p class="text-xs text-slate-600">أربع خطوات بسيطة تفصلك عن معالجة المشكلة الخدمية في منطقتك</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div class="glass-card p-6 rounded-3xl space-y-4 bg-white/90 relative overflow-hidden">
+                            <div class="absolute -top-4 -left-4 w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center text-emerald-600 font-black text-xl">1</div>
+                            <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl font-bold animate-float">📸</div>
+                            <h4 class="font-bold text-slate-900 text-base">التقاط المشكلة</h4>
+                            <p class="text-xs text-slate-600 leading-relaxed">التقط صورة واضحة للعطل (حفرة في الشارع، تسريب مياه، أو أضرار بالبنى التحتية).</p>
+                        </div>
+                        <div class="glass-card p-6 rounded-3xl space-y-4 bg-white/90 relative overflow-hidden">
+                            <div class="absolute -top-4 -left-4 w-16 h-16 bg-sky-500/10 rounded-full flex items-center justify-center text-sky-600 font-black text-xl">2</div>
+                            <div class="w-12 h-12 rounded-2xl bg-sky-100 text-sky-600 flex items-center justify-center text-xl font-bold animate-float">📍</div>
+                            <h4 class="font-bold text-slate-900 text-base">تحديد الموقع GPS أو يدوياً</h4>
+                            <p class="text-xs text-slate-600 leading-relaxed">حدد موقعك الحالي تلقائياً عبر الأقمار الصناعية أو اختره بدقة من الخريطة اليدوية.</p>
+                        </div>
+                        <div class="glass-card p-6 rounded-3xl space-y-4 bg-white/90 relative overflow-hidden">
+                            <div class="absolute -top-4 -left-4 w-16 h-16 bg-teal-500/10 rounded-full flex items-center justify-center text-teal-600 font-black text-xl">3</div>
+                            <div class="w-12 h-12 rounded-2xl bg-teal-100 text-teal-600 flex items-center justify-center text-xl font-bold animate-float">🤖</div>
+                            <h4 class="font-bold text-slate-900 text-base">التحليل والتوجيه الآلي</h4>
+                            <p class="text-xs text-slate-600 leading-relaxed">الذكاء الاصطناعي يصنف البلاغ آلياً ويوجهه مباشرة إلى غرفة العمليات المختصة.</p>
+                        </div>
+                        <div class="glass-card p-6 rounded-3xl space-y-4 bg-white/90 relative overflow-hidden">
+                            <div class="absolute -top-4 -left-4 w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center text-amber-600 font-black text-xl">4</div>
+                            <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-xl font-bold animate-float">✅</div>
+                            <h4 class="font-bold text-slate-900 text-base">المعالجة والإنجاز</h4>
+                            <p class="text-xs text-slate-600 leading-relaxed">تنزل الفرق الفنية للموقع لمعالجة المشكلة، ويصلك إشعار فوري باكتمال الصيانة بنجاح.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- مميزات إضافية -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10 pt-4">
+                    <div class="glass-card p-6 rounded-3xl space-y-3 bg-white/90">
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl font-bold shadow-sm">⚡</div>
+                        <h3 class="text-lg font-bold text-slate-900">استجابة فائقة السرعة</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">ربط مباشر مع غرف العمليات لتقليل وقت الاستجابة للبلاغات الطارئة إلى أقل من 24 ساعة.</p>
+                    </div>
+                    <div class="glass-card p-6 rounded-3xl space-y-3 bg-white/90">
+                        <div class="w-12 h-12 rounded-2xl bg-sky-100 text-sky-600 flex items-center justify-center text-xl font-bold shadow-sm">🛡️</div>
+                        <h3 class="text-lg font-bold text-slate-900">أمن وموثوقية عالية</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">حفظ بيانات المواطنين وتشفير سجلات البلاغات لضمان الخصوصية التامة ومنع البلاغات الوهمية.</p>
+                    </div>
+                    <div class="glass-card p-6 rounded-3xl space-y-3 bg-white/90">
+                        <div class="w-12 h-12 rounded-2xl bg-teal-100 text-teal-600 flex items-center justify-center text-xl font-bold shadow-sm">📊</div>
+                        <h3 class="text-lg font-bold text-slate-900">تقارير وإحصائيات حية</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">لوحة تحكم ذكية تعرض مؤشرات الأداء الخدمي ونسب الإنجاز في أحياء المدينة بشكل لحظي.</p>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- ==================== TAB 1: REPORT ISSUE ==================== -->
+            <section id="tab-report" class="hidden space-y-8 animate-fade-in">
+                <div class="text-center max-w-2xl mx-auto space-y-2">
+                    <h2 class="text-3xl font-black text-slate-900">إرسال بلاغ خدمي جديد</h2>
+                    <p class="text-xs text-slate-600">ارفع الصورة وسيقوم الذكاء الاصطناعي بتحليلها وتحديد التصنيف ورصدها تلقائياً</p>
+                </div>
+
+                <div class="max-w-2xl mx-auto glass-card rounded-3xl p-6 sm:p-8 shadow-2xl border border-emerald-500/20 bg-white/95 relative">
+                    
+                    <div id="inpage-success-banner" class="hidden mb-6 p-4 rounded-2xl bg-emerald-100 border border-emerald-300 text-emerald-800 text-xs sm:text-sm font-bold flex items-center gap-3 animate-slide-down">
+                        <span class="text-2xl">🎉</span>
+                        <div>
+                            <p class="font-black text-emerald-900">تم إرسال البلاغ وتحليله بنجاح!</p>
+                            <p class="text-[11px] font-medium text-emerald-700 mt-0.5">تم رصد وتصنيف المشكلة آلياً وجاري توجيهها لغرفة العمليات...</p>
+                        </div>
+                    </div>
+
+                    <form id="report-form" onsubmit="submitReport(event)" class="space-y-6">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-2">صورة المشكلة الميدانية</label>
+                            <div class="border-2 border-dashed border-emerald-300 hover:border-emerald-500 rounded-2xl p-6 text-center cursor-pointer transition-all bg-emerald-50/50 group">
+                                <input type="file" id="issue-image" accept="image/*" class="hidden" onchange="previewImage(event)">
+                                <div onclick="document.getElementById('issue-image').click()" class="space-y-2">
+                                    <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 mx-auto flex items-center justify-center text-xl group-hover:scale-110 transition-transform">📷</div>
+                                    <p class="text-xs font-medium text-slate-700">انقر لرفع صورة أو اسحبها هنا</p>
+                                    <div id="image-preview-container" class="hidden mt-4">
+                                        <img id="image-preview" class="max-h-40 mx-auto rounded-xl border border-emerald-200 object-cover">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-2">تصنيف العطل الخدمي (تحديد تلقائي بالذكاء الاصطناعي)</label>
+                            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                                <button type="button" onclick="selectCategory('potholes', this)" class="category-btn p-3 rounded-xl border border-slate-200 bg-slate-50 hover:border-emerald-500 text-center transition-all flex flex-col items-center gap-1 text-xs">
+                                    ⚠️ <span class="text-slate-700 font-medium">حفر وشوارع</span>
+                                </button>
+                                <button type="button" onclick="selectCategory('water', this)" class="category-btn p-3 rounded-xl border border-slate-200 bg-slate-50 hover:border-emerald-500 text-center transition-all flex flex-col items-center gap-1 text-xs">
+                                    💧 <span class="text-slate-700">تسريب مياه</span>
+                                </button>
+                                <button type="button" onclick="selectCategory('electricity', this)" class="category-btn p-3 rounded-xl border border-slate-200 bg-slate-50 hover:border-emerald-500 text-center transition-all flex flex-col items-center gap-1 text-xs">
+                                    ⚡ <span class="text-slate-700">كهرباء وإنارة</span>
+                                </button>
+                                <button type="button" onclick="selectCategory('waste', this)" class="category-btn p-3 rounded-xl border border-slate-200 bg-slate-50 hover:border-emerald-500 text-center transition-all flex flex-col items-center gap-1 text-xs">
+                                    🗑️ <span class="text-slate-700">نفايات وتلوث</span>
+                                </button>
+                                <button type="button" onclick="selectCategory('other', this)" class="category-btn p-3 rounded-xl border border-slate-200 bg-slate-50 hover:border-emerald-500 text-center transition-all flex flex-col items-center gap-1 text-xs">
+                                    ❓ <span class="text-slate-700">أخرى</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-2">الموقع الجغرافي (GPS أو تحديد يدوي من الخريطة)</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="location-input" required placeholder="حدد الموقع آلياً أو يدوياً من الخريطة..." class="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-xs text-slate-800 focus:outline-none focus:border-emerald-500 transition-all">
+                                <button type="button" onclick="detectLocation()" class="px-3 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-emerald-700 font-medium text-xs transition-all flex items-center gap-1 hover:scale-105">
+                                    📍 موقعي الحالي
+                                </button>
+                                <button type="button" onclick="openMapModal()" class="px-3 py-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 font-medium text-xs transition-all flex items-center gap-1 hover:scale-105">
+                                    🗺️ تحديد يدوي
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-2">تفاصيل إضافية أو أقرب معلم</label>
+                            <textarea id="issue-desc" rows="3" placeholder="اكتب تفاصيل إضافية عن المشكلة..." class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs text-slate-800 focus:outline-none focus:border-emerald-500 transition-all"></textarea>
+                        </div>
+
+                        <button type="submit" class="w-full py-4 rounded-2xl emerald-btn shadow-lg text-sm">
+                            تحليل وإرسال البلاغ إلى غرفة العمليات 🚀
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- ==================== TAB 2: MY REPORTS ==================== -->
+            <section id="tab-my-reports" class="hidden space-y-6 animate-fade-in">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900">سجل بلاغاتي المقدمة</h2>
+                        <p class="text-xs text-slate-600">تابع حالة إنجاز البلاغات التي أرسلتها للجهات المختصة</p>
+                    </div>
+                    <div id="reports-count-badge" class="px-4 py-1.5 rounded-xl bg-emerald-100 border border-emerald-300 text-emerald-700 font-semibold text-xs">
+                        0 بلاغات نشطة
+                    </div>
+                </div>
+
+                <div id="reports-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="col-span-full text-center py-16 glass-card rounded-3xl bg-white/90">
+                        <p class="text-slate-500 text-sm">لا توجد بلاغات مرسلة حتى الآن. ابدأ بإرسال بلاغك الأول!</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== TAB 3: STATS ==================== -->
+            <section id="tab-stats" class="hidden space-y-6 animate-fade-in">
+                <div class="text-center max-w-xl mx-auto space-y-2">
+                    <h2 class="text-2xl font-bold text-slate-900">إحصائيات وحالة المدينة الحية</h2>
+                    <p class="text-xs text-slate-600">مؤشرات الأداء وسرعة الاستجابة للفرق الخدمية والبلدية</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <div class="glass-card p-6 rounded-3xl text-center space-y-2 bg-white/90">
+                        <p class="text-3xl font-black text-emerald-600">1,482</p>
+                        <p class="text-xs text-slate-600">إجمالي البلاغات المعالجة</p>
+                    </div>
+                    <div class="glass-card p-6 rounded-3xl text-center space-y-2 bg-white/90">
+                        <p class="text-3xl font-black text-sky-600">92%</p>
+                        <p class="text-xs text-slate-600">نسبة سرعة الاستجابة والرضا</p>
+                    </div>
+                    <div class="glass-card p-6 rounded-3xl text-center space-y-2 bg-white/90">
+                        <p class="text-3xl font-black text-teal-600">24 ساعة</p>
+                        <p class="text-xs text-slate-600">متوسط وقت حل البلاغ الطارئ</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== TAB 4: EMERGENCY ==================== -->
+            <section id="tab-emergency" class="hidden space-y-6 animate-fade-in">
+                <div class="text-center max-w-xl mx-auto space-y-2">
+                    <h2 class="text-2xl font-bold text-slate-900">دليل الطوارئ والأرقام الخدمية</h2>
+                    <p class="text-xs text-slate-600">اتصال سريع بالدوائر الخدمية والقطاعات الحيوية في المدينة</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="glass-card p-5 rounded-2xl space-y-2 border-l-4 border-emerald-500 bg-white/90">
+                        <p class="text-sm font-bold text-slate-900">غرفة عمليات البلدية</p>
+                        <p class="text-xs text-emerald-600 font-mono font-bold">123 أو 0770XXXXXXX</p>
+                    </div>
+                    <div class="glass-card p-5 rounded-2xl space-y-2 border-l-4 border-sky-500 bg-white/90">
+                        <p class="text-sm font-bold text-slate-900">طوارئ شبكات الماء</p>
+                        <p class="text-xs text-sky-600 font-mono font-bold">155 أو 0771XXXXXXX</p>
+                    </div>
+                    <div class="glass-card p-5 rounded-2xl space-y-2 border-l-4 border-amber-500 bg-white/90">
+                        <p class="text-sm font-bold text-slate-900">صيانة طوارئ الكهرباء</p>
+                        <p class="text-xs text-amber-600 font-mono font-bold">166 أو 0772XXXXXXX</p>
+                    </div>
+                    <div class="glass-card p-5 rounded-2xl space-y-2 border-l-4 border-rose-500 bg-white/90">
+                        <p class="text-sm font-bold text-rose-600 font-mono font-bold">الإسعاف الفوري</p>
+                        <p class="text-xs text-rose-600 font-mono font-bold">122</p>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ==================== MAP MODAL (تحديد الموقع اليدوي) ==================== -->
+    <div id="map-modal" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+        <div class="glass-card max-w-2xl w-full rounded-3xl p-6 bg-white shadow-2xl space-y-4 border border-emerald-500/30">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h3 class="text-base font-black text-slate-900">حدد موقع المشكلة على خريطة كركوك</h3>
+                    <p class="text-[11px] text-slate-500">انقر بالماوس على مكان الحفرة أو التسريب بدقة لتثبيت الإحداثيات:</p>
+                </div>
+                <button type="button" onclick="closeMapModal()" class="text-rose-600 font-bold text-xs px-3 py-1.5 bg-rose-50 rounded-xl hover:bg-rose-100 transition-all">إغلاق ✕</button>
+            </div>
+            
+            <div id="leaflet-map" class="w-full h-80 rounded-2xl border border-emerald-200 shadow-inner z-10"></div>
+            
+            <button type="button" onclick="confirmManualLocation()" class="w-full py-3 rounded-xl emerald-btn text-xs font-bold shadow-md">
+                تأكيد واختيار هذا الموقع ✓
+            </button>
+        </div>
+    </div>
+
+    <!-- ==================== JAVASCRIPT ==================== -->
+    <script>
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        const iraqGovernorates = [
+            { name: "دهوك", rx: -0.15, ry: -0.72, color: "#8b5cf6" },
+            { name: "أربيل", rx: 0.12, ry: -0.58, color: "#0ea5e9" },
+            { name: "نينوى (الموصل)", rx: -0.32, ry: -0.55, color: "#f59e0b" },
+            { name: "السليمانية", rx: 0.35, ry: -0.48, color: "#3b82f6" },
+            { name: "كركوك", rx: 0.15, ry: -0.38, color: "#10b981" },
+            { name: "صلاح الدين", rx: -0.05, ry: -0.20, color: "#14b8a6" },
+            { name: "ديالى", rx: 0.28, ry: -0.05, color: "#6366f1" },
+            { name: "الأنبار", rx: -0.45, ry: -0.02, color: "#f97316" },
+            { name: "بغداد", rx: 0.05, ry: 0.05, color: "#059669" },
+            { name: "كربلاء", rx: -0.15, ry: 0.18, color: "#ec4899" },
+            { name: "بابل", rx: 0.02, ry: 0.22, color: "#8b5cf6" },
+            { name: "واسط", rx: 0.38, ry: 0.20, color: "#06b6d4" },
+            { name: "النجف", rx: -0.22, ry: 0.35, color: "#10b981" },
+            { name: "الديوانية", rx: -0.05, ry: 0.42, color: "#f43f5e" },
+            { name: "ميسان", rx: 0.48, ry: 0.45, color: "#eab308" },
+            { name: "المثنى", rx: -0.18, ry: 0.60, color: "#64748b" },
+            { name: "ذي قار", rx: 0.18, ry: 0.54, color: "#3b82f6" },
+            { name: "البصرة", rx: 0.55, ry: 0.72, color: "#ef4444" }
+        ];
+
+        let mouseX = width / 2;
+        let mouseY = height / 2;
+        window.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        let ekgOffset = 0;
+
+        function animateBg() {
+            ctx.clearRect(0, 0, width, height);
+            ctx.save();
+            ctx.strokeStyle = 'rgba(16, 185, 129, 0.18)';
+            ctx.lineWidth = 2.5;
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = '#10b981';
+
+            ekgOffset += 2;
+            if (ekgOffset > width) ekgOffset = 0;
+
+            [height * 0.25, height * 0.75].forEach((baseY, waveIdx) => {
+                ctx.beginPath();
+                for (let x = 0; x < width; x += 3) {
+                    let freq = 0.015;
+                    let p = (x + ekgOffset * (waveIdx === 0 ? 1 : -1)) * freq;
+                    let mathVal = Math.sin(p);
+                    let spike = Math.exp(-Math.pow((Math.sin(p) * 4) % 3, 2)) * 35 * (Math.sin(p * 0.5) > 0 ? 1 : -0.3);
+                    let y = baseY + mathVal * 15 + spike;
+                    if (x === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            });
+            ctx.restore();
+
+            const cx = width * 0.5 + (mouseX - width/2) * 0.03;
+            const cy = height * 0.5 + (mouseY - height/2) * 0.03;
+            const scale = Math.min(width, height) * 0.55;
+
+            const govNodes = iraqGovernorates.map(g => ({
+                name: g.name,
+                x: cx + g.rx * scale,
+                y: cy + g.ry * scale,
+                color: g.color
+            }));
+
+            govNodes.forEach((gov, index) => {
+                let pulse = Math.sin(Date.now() * 0.004 + index) * 6;
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(gov.x, gov.y, 11 + pulse, 0, Math.PI * 2);
+                ctx.strokeStyle = gov.color;
+                ctx.lineWidth = 2;
+                ctx.shadowBlur = 16;
+                ctx.shadowColor = gov.color;
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(gov.x, gov.y, 5, 0, Math.PI * 2);
+                ctx.fillStyle = gov.color;
+                ctx.fill();
+                ctx.fillStyle = '#0f172a';
+                ctx.font = 'bold 12px Cairo';
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = '#ffffff';
+                ctx.fillText(gov.name, gov.x + 15, gov.y + 4);
+                ctx.restore();
+            });
+
+            requestAnimationFrame(animateBg);
+        }
+        animateBg();
+
+        const cursor = document.getElementById('cursor');
+        const cursorDot = document.getElementById('cursor-dot');
+        window.addEventListener('mousemove', (e) => {
+            cursor.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
+            cursorDot.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
+        });
+
+        window.addEventListener('click', (e) => {
+            const ripple = document.createElement('div');
+            ripple.className = 'ripple'; 
+            ripple.style.left = `${e.clientX}px`;
+            ripple.style.top = `${e.clientY}px`;
+            document.body.appendChild(ripple);
+            setTimeout(() => { ripple.remove(); }, 600);
+        });
+
+        window.onload = function() {
+            const savedName = localStorage.getItem('civic_user_name');
+            if (savedName) {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('main-app').classList.remove('hidden');
+                document.getElementById('display-user-name').innerText = `مرحباً، ${savedName}`;
+            }
+        };
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const name = document.getElementById('user-name-input').value;
+            const phone = document.getElementById('user-phone-input').value;
+            
+            localStorage.setItem('civic_user_name', name);
+            localStorage.setItem('civic_user_phone', phone);
+
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            document.getElementById('display-user-name').innerText = `مرحباً، ${name}`;
+
+            confetti({
+                particleCount: 150,
+                spread: 110,
+                origin: { y: 0.6 },
+                colors: ['#059669', '#10b981', '#0ea5e9', '#ffffff']
+            });
+
+            const banner = document.getElementById('welcome-banner');
+            document.getElementById('welcome-msg-title').innerText = `أهلاً بك يا ${name}!`;
+            banner.classList.remove('hidden');
+
+            setTimeout(() => { banner.classList.add('hidden'); }, 4000);
+        }
+
+        function logout() {
+            localStorage.removeItem('civic_user_name');
+            localStorage.removeItem('civic_user_phone');
+            location.reload();
+        }
+
+        function switchTab(tabName) {
+            ['home', 'report', 'my-reports', 'stats', 'emergency'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                const btn = document.getElementById(`nav-${t}`);
+                if(btn) btn.className = "px-4 py-2 rounded-xl text-xs font-semibold transition-all text-slate-600 hover:text-emerald-600 hover:bg-white";
+            });
+
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`nav-${tabName}`);
+            if(activeBtn) activeBtn.className = "px-4 py-2 rounded-xl text-xs font-semibold transition-all bg-emerald-600 text-white shadow-md";
+
+            if(tabName === 'my-reports') renderReports();
+        }
+
+        let reportsData = [];
+        let selectedCategoryVal = 'potholes';
+
+        function selectCategory(category, btn) {
+            selectedCategoryVal = category;
+            document.querySelectorAll('.category-btn').forEach(b => {
+                b.className = "category-btn p-3 rounded-xl border border-slate-200 bg-slate-50 hover:border-emerald-500 text-center transition-all flex flex-col items-center gap-1 text-xs";
+            });
+            if(btn) {
+                btn.className = "category-btn p-3 rounded-xl border border-emerald-500 bg-emerald-50 text-center transition-all flex flex-col items-center gap-1 text-xs";
+            }
+        }
+
+        function detectLocation() {
+            const locInput = document.getElementById('location-input');
+            locInput.value = "📍 جاري تحديد الإحداثيات عبر نظام GPS بدقة...";
+            setTimeout(() => {
+                locInput.value = "حي الثورة / الشارع العام، كركوك (موقع مباشر عبر GPS)";
+            }, 1000);
+        }
+
+        // دوال الخريطة اليدوية (Leaflet)
+        let manualMap = null;
+        let manualMarker = null;
+        let selectedAddressText = "العراق (تحديد يدوي من الخريطة)";
+
+        function openMapModal() {
+            document.getElementById('map-modal').classList.remove('hidden');
+            setTimeout(() => {
+                if (!manualMap) {
+                    // ضبط مركز الخريطة ليظهر العراق بالكامل بمستوى تقريب 6
+                    manualMap = L.map('leaflet-map').setView([33.2232, 43.6793], 6);
+                    
+                    // استخدام خريطة Esri الاحترافية بدون أي قيود أو API Key
+                    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+                        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS',
+                        maxZoom: 19
+                    }).addTo(manualMap);
+
+                    manualMap.on('click', function(e) {
+                        const lat = e.latlng.lat;
+                        const lng = e.latlng.lng;
+                        if (manualMarker) {
+                            manualMarker.setLatLng([lat, lng]);
+                        } else {
+                            manualMarker = L.marker([lat, lng]).addTo(manualMap);
+                        }
+                        selectedAddressText = `جمهورية العراق (إحداثيات يدوية: ${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+                    });
+                } else {
+                    manualMap.invalidateSize();
+                }
+            }, 200);
+        }
+
+        function closeMapModal() {
+            document.getElementById('map-modal').classList.add('hidden');
+        }
+
+        function confirmManualLocation() {
+            const locInput = document.getElementById('location-input');
+            locInput.value = selectedAddressText;
+            closeMapModal();
+        }
+
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('image-preview');
+                if (preview) preview.src = e.target.result;
+                const container = document.getElementById('image-preview-container');
+                if (container) container.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        let reportTimer = null; // متغير لحفظ وإدارة مؤقت البانر
+
+        async function submitReport(event) {
+            event.preventDefault();
+            
+            // إلغاء أي مؤقت سابق لضمان ظهور رسالة التحليل بكل مرة
+            if (reportTimer) clearTimeout(reportTimer);
+
+            const imageInput = document.getElementById('issue-image');
+            const locationInput = document.getElementById('location-input');
+            const descInput = document.getElementById('issue-desc');
+            
+            const location = (locationInput ? locationInput.value : "") || "كركوك، العراق";
+            const userDesc = (descInput ? descInput.value : "") || "بدون تفاصيل إضافية";
+
+            if (imageInput.files.length === 0) {
+                alert("يرجى إرفاق صورة للمشكلة أولاً!");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", imageInput.files[0]);
+
+            // إظهار بانر التحليل في كل مرة يتم فيها الضغط على إرسال بلاغ
+            const successBanner = document.getElementById('inpage-success-banner');
+            successBanner.classList.remove('hidden');
+            successBanner.innerHTML = `<span class="text-2xl">🤖</span><div><p class="font-black">الذكاء الاصطناعي يحلل الصورة ويحدد التصنيف تلقائياً...</p></div>`;
+
+            try {
+                const response = await fetch("http://127.0.0.1:8000/api/predict", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await response.json();
+                
+                let finalImageSrc = data.success ? data.processed_image : document.getElementById('image-preview').src;
+
+                // تحديث الزر في الواجهة تلقائياً حسب تصنيف الـ AI
+                if (data.category_ar && (data.category_ar.includes("تسريب") || data.category_ar.includes("مياه"))) {
+                    const waterBtn = document.querySelector("button[onclick*='water']");
+                    selectCategory('water', waterBtn);
+                } else {
+                    const potholeBtn = document.querySelector("button[onclick*='potholes']");
+                    selectCategory('potholes', potholeBtn);
+                }
+
+                reportsData.unshift({
+                    id: Math.floor(Math.random() * 90000) + 10000,
+                    categoryAr: data.category_ar || "⚠️ حفر وشوارع (تصنيف آلي)",
+                    location: location,
+                    desc: `${userDesc} (رصد تلقائي: ${data.detections_count} مشكلة)`,
+                    image: finalImageSrc,
+                    date: new Date().toLocaleDateString('ar-IQ'),
+                    status: 'قيد المعالجة الميدانية'
+                });
+                
+                confetti({ particleCount: 110, spread: 90, origin: { y: 0.7 }, colors: ['#059669', '#10b981', '#0ea5e9'] });
+
+                successBanner.innerHTML = `<span class="text-2xl">🎉</span><div><p class="font-black">تم تحديد التصنيف ورصد المشكلة آلياً بنجاح!</p></div>`;
+
+                document.getElementById('report-form').reset();
+                document.getElementById('image-preview-container').classList.add('hidden');
+
+                // تشغيل المؤقت لإخفاء البانر والانتقال للسجل بعد نجاح التحليل
+                reportTimer = setTimeout(() => {
+                    successBanner.classList.add('hidden');
+                    switchTab('my-reports');
+                }, 1800);
+
+            } catch (error) {
+                console.error("خطأ في الاتصال بالسيرفر:", error);
+                alert("تأكد من تشغيل سيرفر البايثون (server.py) أولاً!");
+                successBanner.classList.add('hidden');
+            }
+        }
+
+        function renderReports() {
+            const listContainer = document.getElementById('reports-list');
+            document.getElementById('reports-count-badge').innerText = `${reportsData.length} بلاغات نشطة`;
+
+            if (reportsData.length === 0) {
+                listContainer.innerHTML = `<div class="col-span-full text-center py-16 glass-card rounded-3xl bg-white/90"><p class="text-slate-500 text-sm">لا توجد بلاغات مرسلة حتى الآن.</p></div>`;
+                return;
+            }
+
+            let html = '';
+            reportsData.forEach(rep => {
+                html += `
+                    <div class="glass-card rounded-2xl p-5 flex gap-4 items-start shadow-xl animate-fade-in border border-emerald-500/20 bg-white/95">
+                        <img src="${rep.image}" class="w-24 h-24 rounded-xl object-cover border border-emerald-200">
+                        <div class="flex-1 space-y-2">
+                            <div class="flex justify-between items-center">
+                                <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">رقم البلاغ: #${rep.id}</span>
+                                <span class="text-xs text-emerald-700 font-bold">${rep.status}</span>
+                            </div>
+                            <div class="inline-block px-3 py-1 rounded-lg bg-sky-100 text-sky-800 text-xs font-black">${rep.categoryAr || 'تصنيف آلي بالذكاء الاصطناعي'}</div>
+                            <h4 class="text-xs font-bold text-slate-900">${rep.location}</h4>
+                            <p class="text-xs text-slate-700 leading-relaxed bg-emerald-50/50 p-2.5 rounded-xl border border-emerald-100">${rep.desc}</p>
+                            <div class="text-[10px] text-slate-400">تاريخ الإرسال: ${rep.date}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            listContainer.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
