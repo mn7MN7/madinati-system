@@ -1,2 +1,0 @@
-# madinati-system
-مدينه ذكيه 
