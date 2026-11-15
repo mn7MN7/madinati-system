@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="html-root">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بوابة النظام الموحد / نبض مدينتي CityPulse AI</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Inter:wght@300;400;600;700&display=swap');
+        
+        /* الوضع الافتراضي: الفاتح (Light Mode) */
+        :root {
+            --bg-main: radial-gradient(circle at center, #f0fdf4 0%, #e6fffa 100%);
+            --text-main: #1e293b;
+            --card-bg: rgba(255, 255, 255, 0.92);
+            --card-border: rgba(16, 185, 129, 0.3);
+            --card-shadow: 0 25px 50px rgba(16, 185, 129, 0.15);
+            --team-box-bg: rgba(255, 255, 255, 0.85);
+            --team-badge-bg: rgba(248, 250, 252, 0.9);
+            --team-badge-text: #1e293b;
+            --portal-title-color: #0f172a;
+            --portal-desc-color: #475569;
+        }
+
+        /* الوضع الليلي (Dark Mode) الفاخر */
+        body.dark-mode {
+            --bg-main: radial-gradient(circle at center, #0f172a 0%, #060913 100%);
+            --text-main: #f8fafc;
+            --card-bg: rgba(15, 23, 42, 0.90);
+            --card-border: rgba(16, 185, 129, 0.35);
+            --card-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
+            --team-box-bg: rgba(15, 23, 42, 0.8);
+            --team-badge-bg: rgba(30, 41, 59, 0.85);
+            --team-badge-text: #ffffff;
+            --portal-title-color: #ffffff;
+            --portal-desc-color: #cbd5e1;
+        }
+
+        body {
+            font-family: 'Cairo', 'Inter', sans-serif;
+            background: var(--bg-main);
+            color: var(--text-main);
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 20px;
+            transition: background 0.4s ease, color 0.4s ease;
+        }
+
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.95;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fade-down {
+            animation: fadeInDown 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .animate-fade-up {
+            animation: fadeInUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes floatTeam {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(0.3deg); }
+        }
+        @keyframes floatPortal1 {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-12px) scale(1.02); }
+        }
+        @keyframes floatPortal2 {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(12px) scale(1.02); }
+        }
+
+        .animate-team-float {
+            animation: floatTeam 5s ease-in-out infinite;
+        }
+        .animate-portal-1 {
+            animation: floatPortal1 6s ease-in-out infinite;
+        }
+        .animate-portal-2 {
+            animation: floatPortal2 7s ease-in-out infinite;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.25); }
+        }
+        .bg-glow-1 {
+            position: absolute;
+            top: 10%;
+            left: 15%;
+            width: 400px;
+            height: 400px;
+            background: rgba(16, 185, 129, 0.2);
+            filter: blur(140px);
+            border-radius: 50%;
+            animation: pulseGlow 6s infinite ease-in-out;
+            z-index: -2;
+        }
+        .bg-glow-2 {
+            position: absolute;
+            bottom: 10%;
+            right: 15%;
+            width: 450px;
+            height: 450px;
+            background: rgba(14, 165, 233, 0.2);
+            filter: blur(160px);
+            border-radius: 50%;
+            animation: pulseGlow 8s infinite ease-in-out;
+            z-index: -2;
+        }
+
+        /* دوائر البوابات */
+        .glass-circle-portal {
+            width: 280px;
+            height: 280px;
+            border-radius: 50%;
+            background: var(--card-bg);
+            backdrop-filter: blur(25px);
+            border: 3px solid rgba(16, 185, 129, 0.4);
+            box-shadow: var(--card-shadow);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 30px;
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+        }
+        .glass-circle-portal:hover {
+            transform: translateY(-15px) scale(1.08) !important;
+            border-color: #059669;
+            box-shadow: 0 40px 80px rgba(16, 185, 129, 0.4), 0 0 35px rgba(16, 185, 129, 0.5);
+        }
+
+        .glass-circle-portal.gov {
+            border: 3px solid rgba(14, 165, 233, 0.4);
+        }
+        .glass-circle-portal.gov:hover {
+            border-color: #0284c7;
+            box-shadow: 0 40px 80px rgba(14, 165, 233, 0.4), 0 0 35px rgba(14, 165, 233, 0.5);
+        }
+
+        /* المربع الرئيسي لفريق العمل */
+        .team-main-box {
+            background: var(--team-box-bg);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            box-shadow: var(--card-shadow);
+        }
+
+        /* شارات الأسماء */
+        .team-badge {
+            background: var(--team-badge-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            color: var(--team-badge-text);
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        .team-badge:hover {
+            border-color: #10b981;
+            transform: translateY(-4px) scale(1.04);
+            box-shadow: 0 12px 35px rgba(16, 185, 129, 0.3);
+        }
+
+        .emerald-gradient-text {
+            background: linear-gradient(135deg, #059669 0%, #10b981 50%, #0ea5e9 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        @keyframes iconPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .portal-icon {
+            animation: iconPulse 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="relative">
+
+    <!-- زر الوضع الليلي والنهاري في أعلى الشاشة -->
+    <div class="absolute top-6 left-6 z-50">
+        <button onclick="toggleThemeMode()" id="theme-toggle-btn" class="px-4 py-2.5 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-xs font-bold transition-all hover:scale-105 flex items-center gap-2 shadow-lg backdrop-blur-md" style="color: var(--text-main);" title="تبديل المظهر">
+            <span id="theme-icon">🌙</span> <span id="theme-text">وضع ليلي: إطفاء</span>
+        </button>
+    </div>
+
+    <canvas id="bg-canvas"></canvas>
+    <div class="bg-glow-1"></div>
+    <div class="bg-glow-2"></div>
+
+    <div class="max-w-4xl w-full mx-auto space-y-8 text-center z-10 pt-12 sm:pt-0">
+        
+        <!-- أسماء فريق العمل في الأعلى -->
+        <div class="team-main-box w-full rounded-3xl p-5 max-w-2xl mx-auto space-y-3 shadow-2xl animate-team-float animate-fade-down">
+            <div class="flex items-center justify-center gap-2">
+                <span class="text-emerald-500 dark:text-emerald-400 text-sm animate-pulse">✨</span>
+                <p class="text-xs font-bold text-emerald-600 dark:text-emerald-400 tracking-wide">إشراف وتطوير فريق العمل الأكاديمي</p>
+                <span class="text-emerald-500 dark:text-emerald-400 text-sm animate-pulse">✨</span>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <!-- العمود الأول -->
+                <div class="flex flex-col gap-2">
+                    <div class="team-badge p-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-bold">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+                        <span>نورا محمد</span>
+                    </div>
+                    <div class="team-badge p-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-bold">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+                        <span>مازن هجران</span>
+                    </div>
+                </div>
+
+                <!-- العمود الثاني -->
+                <div class="flex flex-col gap-2">
+                    <div class="team-badge p-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-bold">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+                        <span>ايلاف عزيز</span>
+                    </div>
+                    <div class="team-badge p-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-bold">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+                        <span>مصطفى يحيى</span>
+                    </div>
+                </div>
+
+                <!-- العمود الثالث -->
+                <div class="flex flex-col gap-2">
+                    <div class="team-badge p-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-bold">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+                        <span>تولين محمد</span>
+                    </div>
+                    <div class="team-badge p-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-bold">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+                        <span>ديار بشير</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- عنوان المنصة -->
+        <div class="space-y-3 animate-fade-down" style="animation-delay: 0.15s;">
+            <div class="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold shadow-sm backdrop-blur-md">
+                🌐 نظام الذكاء الاصطناعي البلدي المحترف (CityPulse AI)
+            </div>
+            <h1 class="text-4xl sm:text-6xl font-black tracking-tight leading-tight drop-shadow-md">
+                منصة <span class="emerald-gradient-text">نبض مدينتي</span>
+            </h1>
+            <p class="text-xs sm:text-sm font-semibold max-w-md mx-auto opacity-80">
+                اضغط على إحدى البوابات الادارية للبدء في تشغيل النظام
+            </p>
+        </div>
+
+        <!-- أزرار الاختيار الدائرية -->
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-12 max-w-2xl mx-auto pt-2 animate-fade-up">
+            
+            <!-- غرفة العمليات -->
+            <a href="government.html" onclick="triggerConfetti()" class="glass-circle-portal gov animate-portal-1 group">
+                <div class="portal-icon w-16 h-16 rounded-2xl bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform shadow-lg mb-3 border border-sky-500/30">
+                    🏛️
+                </div>
+                <h2 class="text-base font-black mb-1" style="color: var(--portal-title-color);">غرفة العمليات</h2>
+                <p class="text-[11px] leading-tight px-2 font-semibold" style="color: var(--portal-desc-color);">إدارة البلاغات والعمليات والذكاء الاصطناعي الحكومي</p>
+                <span class="mt-3 text-[11px] font-extrabold text-sky-600 dark:text-sky-400 group-hover:underline">دخول العمليات ←</span>
+            </a>
+
+            <!-- بوابة المواطن -->
+            <a href="index.html" onclick="triggerConfetti()" class="glass-circle-portal animate-portal-2 group">
+                <div class="portal-icon w-16 h-16 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform shadow-lg mb-3 border border-emerald-500/30">
+                    👤
+                </div>
+                <h2 class="text-base font-black mb-1" style="color: var(--portal-title-color);">بوابة المواطن</h2>
+                <p class="text-[11px] leading-tight px-2 font-semibold" style="color: var(--portal-desc-color);">رفع وبلاغات المشاكل البلدية وتحليل الصور بالذكاء الاصطناعي</p>
+                <span class="mt-3 text-[11px] font-extrabold text-emerald-600 dark:text-emerald-400 group-hover:underline">دخول المواطن ←</span>
+            </a>
+
+        </div>
+
+    </div>
+
+    <!-- Script للأنيميشن والوضع الليلي والنهاري -->
+    <script>
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        let ekgOffset = 0;
+        function animateBg() {
+            ctx.clearRect(0, 0, width, height);
+            ctx.save();
+            ctx.strokeStyle = document.body.classList.contains('dark-mode') ? 'rgba(16, 185, 129, 0.18)' : 'rgba(16, 185, 129, 0.25)';
+            ctx.lineWidth = 2.5;
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = '#10b981';
+
+            ekgOffset += 2.5;
+            if (ekgOffset > width) ekgOffset = 0;
+
+            [height * 0.25, height * 0.75].forEach((baseY, waveIdx) => {
+                ctx.beginPath();
+                for (let x = 0; x < width; x += 3) {
+                    let freq = 0.015;
+                    let p = (x + ekgOffset * (waveIdx === 0 ? 1 : -1)) * freq;
+                    let mathVal = Math.sin(p);
+                    let spike = Math.exp(-Math.pow((Math.sin(p) * 4) % 3, 2)) * 35 * (Math.sin(p * 0.5) > 0 ? 1 : -0.3);
+                    let y = baseY + mathVal * 15 + spike;
+                    if (x === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            });
+            ctx.restore();
+            requestAnimationFrame(animateBg);
+        }
+        animateBg();
+
+        function toggleThemeMode() {
+            const body = document.body;
+            body.classList.toggle('dark-mode');
+            const isDark = body.classList.contains('dark-mode');
+            localStorage.setItem('civic_theme_dark', isDark);
+            updateThemeButtonUI(isDark);
+        }
+
+        function updateThemeButtonUI(isDark) {
+            const icon = document.getElementById('theme-icon');
+            const text = document.getElementById('theme-text');
+            if (isDark) {
+                icon.innerText = '☀️';
+                text.innerText = 'وضع ليلي: تفعيل';
+            } else {
+                icon.innerText = '🌙';
+                text.innerText = 'وضع ليلي: إطفاء';
+            }
+        }
+
+        window.onload = function() {
+            const savedTheme = localStorage.getItem('civic_theme_dark');
+            if (savedTheme === 'true') {
+                document.body.classList.add('dark-mode');
+                updateThemeButtonUI(true);
+            } else {
+                updateThemeButtonUI(false);
+            }
+        };
+
+        function triggerConfetti() {
+            confetti({
+                particleCount: 130,
+                spread: 80,
+                origin: { y: 0.6 }
+            });
+        }
+    </script>
+</body>
+</html>

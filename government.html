@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="html-root">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>غرفة العمليات الحكومية الذكية / CityPulse AI</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Mapbox GL JS CSS & JS -->
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css" rel="stylesheet" />
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Inter:wght@300;400;600;700&display=swap');
+        
+        :root {
+            --bg-main: linear-gradient(to bottom right, #f8fafc, #f0fdf4, #e6fffa);
+            --text-main: #1e293b;
+            --card-bg: rgba(255, 255, 255, 0.92);
+            --card-border: rgba(16, 185, 129, 0.25);
+            --card-shadow: 0 20px 40px rgba(16, 185, 129, 0.1);
+            --header-bg: rgba(255, 255, 255, 0.88);
+            --input-bg: #f8fafc;
+            --input-border: #cbd5e1;
+            --input-text: #1e293b;
+        }
+
+        body.dark-mode {
+            --bg-main: radial-gradient(circle at center, #0f172a 0%, #060913 100%);
+            --text-main: #f8fafc;
+            --card-bg: rgba(15, 23, 42, 0.90);
+            --card-border: rgba(16, 185, 129, 0.35);
+            --card-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
+            --header-bg: rgba(15, 23, 42, 0.88);
+            --input-bg: #1e293b;
+            --input-border: #334155;
+            --input-text: #ffffff;
+        }
+
+        body {
+            font-family: 'Cairo', 'Inter', sans-serif;
+            background: var(--bg-main);
+            color: var(--text-main);
+            overflow-x: hidden;
+            cursor: default;
+            min-height: 100vh;
+            transition: background 0.4s ease, color 0.4s ease;
+        }
+
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.95;
+        }
+
+        .custom-cursor {
+            pointer-events: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 24px;
+            height: 24px;
+            border: 2px solid #059669;
+            background: rgba(16, 185, 129, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.2s, height 0.2s, background-color 0.2s;
+            z-index: 9999;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
+        }
+        .custom-cursor-dot {
+            pointer-events: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 6px;
+            height: 6px;
+            background-color: #059669;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10000;
+        }
+
+        .glass-card-gov {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            box-shadow: var(--card-shadow);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .glass-card-gov:hover {
+            border-color: rgba(16, 185, 129, 0.6);
+            transform: translateY(-4px) scale(1.005);
+            box-shadow: 0 30px 60px rgba(16, 185, 129, 0.2);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.1); }
+        }
+
+        .bg-glow-emerald {
+            position: absolute;
+            top: 10%;
+            left: 15%;
+            width: 450px;
+            height: 450px;
+            background: rgba(16, 185, 129, 0.15);
+            filter: blur(120px);
+            border-radius: 50%;
+            animation: pulseGlow 6s ease-in-out infinite;
+            z-index: -1;
+        }
+        .bg-glow-sky {
+            position: absolute;
+            bottom: 10%;
+            right: 15%;
+            width: 500px;
+            height: 500px;
+            background: rgba(14, 165, 233, 0.15);
+            filter: blur(140px);
+            border-radius: 50%;
+            animation: pulseGlow 8s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        .emerald-gradient-text {
+            background: linear-gradient(135deg, #059669 0%, #10b981 50%, #0ea5e9 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 2px 10px rgba(16, 185, 129, 0.2));
+        }
+
+        .emerald-btn {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            color: #ffffff;
+            font-weight: 800;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(16, 185, 129, 0.3);
+        }
+        .emerald-btn:hover {
+            opacity: 0.95;
+            transform: scale(1.03);
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.45);
+        }
+
+        .dynamic-input {
+            background-color: var(--input-bg);
+            border-color: var(--input-border);
+            color: var(--input-text);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col relative">
+
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="custom-cursor" id="cursor"></div>
+    <div class="custom-cursor-dot" id="cursor-dot"></div>
+
+    <div class="bg-glow-emerald"></div>
+    <div class="bg-glow-sky"></div>
+
+    <!-- Header -->
+    <header class="border-b border-emerald-500/20 backdrop-blur-md sticky top-0 z-40 shadow-sm" style="background-color: var(--header-bg);">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <div class="h-12 w-12 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-600 text-white flex items-center justify-center font-black text-xl shadow-lg border border-emerald-400/30">🏛️</div>
+                <div>
+                    <h1 class="text-lg font-bold emerald-gradient-text">غرفة العمليات الحكومية الذكية</h1>
+                    <p class="text-[10px] opacity-75">لوحة التحكم المركزية - توجيه الأقسام ومتابعة المواقع الميدانية</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <button onclick="toggleThemeMode()" id="theme-toggle-btn" class="px-3 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-xs font-bold transition-all hover:scale-105 flex items-center gap-1.5 shadow-sm" style="color: var(--text-main);" title="تبديل المظهر">
+                    <span id="theme-icon">🌙</span> <span id="theme-text">وضع ليلي: إطفاء</span>
+                </button>
+
+                <nav class="hidden sm:flex gap-2 p-1.5 rounded-2xl border border-emerald-500/20 bg-emerald-500/5">
+                    <button onclick="switchAdminTab('management')" id="nav-management" class="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-emerald-600 text-white shadow-md">إدارة البلاغات الواردة</button>
+                    <button onclick="switchAdminTab('analytics')" id="nav-analytics" class="px-4 py-2 rounded-xl text-xs font-bold transition-all hover:text-emerald-600">التحليلات والإحصائيات 📊</button>
+                    <button onclick="switchAdminTab('map-view')" id="nav-map-view" class="px-4 py-2 rounded-xl text-xs font-bold transition-all hover:text-emerald-600">خريطة البلاغات الشاملة</button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-1 w-full space-y-8 animate-fade-in relative z-10">
+        
+        <!-- ==================== TAB 1: MANAGEMENT ==================== -->
+        <section id="tab-management" class="space-y-8">
+            <!-- إحصائيات سريعة للحكومة -->
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <div class="p-6 rounded-2xl glass-card-gov border-l-4 border-emerald-500 space-y-1 shadow-lg">
+                    <p class="text-3xl font-black text-emerald-600 dark:text-emerald-400" id="gov-total-count">0</p>
+                    <p class="text-xs opacity-75">إجمالي البلاغات الواردة</p>
+                </div>
+                <div class="p-6 rounded-2xl glass-card-gov border-l-4 border-amber-500 space-y-1 shadow-lg">
+                    <p class="text-3xl font-black text-amber-500" id="gov-pending-count">0</p>
+                    <p class="text-xs opacity-75">قيد المعالجة الميدانية</p>
+                </div>
+                <div class="p-6 rounded-2xl glass-card-gov border-l-4 border-sky-500 space-y-1 shadow-lg">
+                    <p class="text-3xl font-black text-sky-600 dark:text-sky-400" id="gov-accepted-count">0</p>
+                    <p class="text-xs opacity-75">مقبولة ومنجزة</p>
+                </div>
+                <div class="p-6 rounded-2xl glass-card-gov border-l-4 border-rose-500 space-y-1 shadow-lg">
+                    <p class="text-3xl font-black text-rose-600 dark:text-rose-400" id="gov-rejected-count">0</p>
+                    <p class="text-xs opacity-75">بلاغات مرفوضة</p>
+                </div>
+            </div>
+
+            <!-- شريط الفلترة والأزرار المتقدمة (حالة وأولوية الذكاء الاصطناعي والتصويت المجتمعي) -->
+            <div class="flex flex-col gap-3 glass-card-gov p-4 rounded-2xl border border-emerald-500/20 shadow-lg">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex flex-wrap gap-2 text-xs items-center">
+                        <span class="font-bold text-emerald-600 dark:text-emerald-400 ml-1">حالة البلاغ:</span>
+                        <button onclick="filterGovReports('all')" id="filter-all-btn" class="px-3 py-1.5 rounded-xl emerald-btn text-white font-bold transition-all shadow-md">الكل</button>
+                        <button onclick="filterGovReports('pending')" id="filter-pending-btn" class="px-3 py-1.5 rounded-xl glass-card-gov hover:opacity-90 transition-all font-semibold">قيد المعالجة</button>
+                        <button onclick="filterGovReports('done')" id="filter-done-btn" class="px-3 py-1.5 rounded-xl glass-card-gov hover:opacity-90 transition-all font-semibold">المنجزة والمقبولة</button>
+                        <!-- زر البلاغات الأكثر تضرراً وتصويتاً من المواطنين -->
+                        <button onclick="filterGovReports('most_voted')" id="filter-most_voted-btn" class="px-3 py-1.5 rounded-xl glass-card-gov hover:opacity-90 transition-all font-semibold text-amber-600 dark:text-amber-400 border border-amber-500/30">🔥 الأكثر تصويتاً وضرر للمواطنين</button>
+                    </div>
+
+                    <button onclick="forceRefreshReports()" class="px-4 py-2 rounded-xl emerald-btn text-xs font-bold text-white transition-all shadow-md flex items-center gap-2 hover:scale-105">
+                        <span>🔄 تحديث البلاغات</span>
+                    </button>
+                </div>
+
+                <!-- فلاتر أولوية الذكاء الاصطناعي (عادية، متوسطة، حرجة) -->
+                <div class="flex flex-wrap gap-2 text-xs items-center pt-2 border-t border-emerald-500/10">
+                    <span class="font-bold text-emerald-600 dark:text-emerald-400 ml-1">أولوية الذكاء الاصطناعي:</span>
+                    <button onclick="filterPriorityReports('all')" id="priority-all-btn" class="px-3 py-1.5 rounded-xl bg-emerald-600 text-white font-bold transition-all shadow-md">كافة الأولويات</button>
+                    <button onclick="filterPriorityReports('critical')" id="priority-critical-btn" class="px-3 py-1.5 rounded-xl glass-card-gov hover:opacity-90 transition-all font-semibold text-rose-600 dark:text-rose-400 border border-rose-500/30">حرجة وعاجلة 🔴</button>
+                    <button onclick="filterPriorityReports('medium')" id="priority-medium-btn" class="px-3 py-1.5 rounded-xl glass-card-gov hover:opacity-90 transition-all font-semibold text-amber-600 dark:text-amber-400 border border-amber-500/30">متوسطة 🟡</button>
+                    <button onclick="filterPriorityReports('normal')" id="priority-normal-btn" class="px-3 py-1.5 rounded-xl glass-card-gov hover:opacity-90 transition-all font-semibold text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">عادية 🟢</button>
+                </div>
+            </div>
+
+            <!-- قائمة البلاغات -->
+            <div id="government-reports-list" class="space-y-4">
+                <div class="text-center py-16 glass-card-gov rounded-3xl border border-emerald-500/20 opacity-75 text-sm shadow-xl">
+                    جاري جلب البلاغات من سيرفر البايثون...
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 2: ANALYTICS ==================== -->
+        <section id="tab-analytics" class="hidden space-y-6">
+            <div>
+                <h2 class="text-2xl font-black">التحليلات والإحصائيات الذكية 📊</h2>
+                <p class="text-xs opacity-75">مؤشرات أداء غرفة العمليات وتوزيع البلاغات والتدخلات الميدانية</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="glass-card-gov p-6 rounded-3xl border border-emerald-500/20 shadow-xl space-y-4">
+                    <h3 class="text-sm font-black text-emerald-600 dark:text-emerald-400">توزيع البلاغات حسب القطاعات الخدمية</h3>
+                    <div class="relative w-full h-72 flex items-center justify-center">
+                        <canvas id="categoriesChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="glass-card-gov p-6 rounded-3xl border border-emerald-500/20 shadow-xl space-y-4">
+                    <h3 class="text-sm font-black text-emerald-600 dark:text-emerald-400">معدل الإنجاز مقابل البلاغات القائمة</h3>
+                    <div class="relative w-full h-72 flex items-center justify-center">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 3: MAP VIEW ==================== -->
+        <section id="tab-map-view" class="hidden space-y-6">
+            <div>
+                <h2 class="text-2xl font-black">خريطة البلاغات الميدانية الحية 🗺</h2>
+                <p class="text-xs opacity-75">تتبع مواقع الطوارئ وتوجيه الأقسام والفرق الميدانية في مدينة كركوك لحظياً</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+                
+                <!-- اليسار: بطاقة تصفية القطاعات وأدلة الألوان -->
+                <div class="lg:col-span-1 glass-card-gov p-5 rounded-3xl space-y-4 border border-emerald-500/20 shadow-xl">
+                    <div class="flex items-center justify-between border-b border-emerald-500/20 pb-3">
+                        <h3 class="text-sm font-black flex items-center gap-2">
+                            <span>🏷️</span> تصفية حسب القطاع
+                        </h3>
+                        <span class="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold">ألوان مخصصة</span>
+                    </div>
+
+                    <p class="text-[11px] opacity-75 leading-relaxed">انقر على أي قطاع أدناه لفلترة دبابيس الخريطة فوراً:</p>
+
+                    <!-- أزرار الفلترة الملونة -->
+                    <div class="space-y-2.5" id="category-filters-container">
+                        <button onclick="setMapCategoryFilter('all')" class="w-full flex items-center justify-between p-3.5 rounded-2xl bg-emerald-600 text-white text-xs font-bold transition-all shadow-md cat-filter-btn" data-cat="all">
+                            <span>📂 كافة القطاعات</span>
+                            <span id="count-all" class="count-badge bg-white text-emerald-950 px-2.5 py-1 rounded-xl text-xs font-black shadow-sm">0</span>
+                        </button>
+                        <button onclick="setMapCategoryFilter('طرق')" class="w-full flex items-center justify-between p-3.5 rounded-2xl glass-card-gov hover:opacity-90 text-xs font-bold transition-all border border-emerald-500/20 cat-filter-btn" data-cat="طرق">
+                            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-orange-500 inline-block"></span> صيانة الطرق والجسور</span>
+                            <span id="count-roads" class="count-badge bg-orange-500/10 text-orange-600 px-2.5 py-1 rounded-xl text-xs font-black shadow-sm border border-orange-500/30">0</span>
+                        </button>
+                        <button onclick="setMapCategoryFilter('كهرباء')" class="w-full flex items-center justify-between p-3.5 rounded-2xl glass-card-gov hover:opacity-90 text-xs font-bold transition-all border border-emerald-500/20 cat-filter-btn" data-cat="كهرباء">
+                            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-sky-500 inline-block"></span> طوارئ شبكات الكهرباء</span>
+                            <span id="count-elec" class="count-badge bg-sky-500/10 text-sky-600 px-2.5 py-1 rounded-xl text-xs font-black shadow-sm border border-sky-500/30">0</span>
+                        </button>
+                        <button onclick="setMapCategoryFilter('بلدية')" class="w-full flex items-center justify-between p-3.5 rounded-2xl glass-card-gov hover:opacity-90 text-xs font-bold transition-all border border-emerald-500/20 cat-filter-btn" data-cat="بلدية">
+                            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span> النفايات والبلدية العامة</span>
+                            <span id="count-mun" class="count-badge bg-emerald-500/10 text-emerald-600 px-2.5 py-1 rounded-xl text-xs font-black shadow-sm border border-emerald-500/30">0</span>
+                        </button>
+                    </div>
+
+                    <div class="pt-3 border-t border-emerald-500/20">
+                        <p class="text-[10px] opacity-75 leading-relaxed">💡 **إرشاد للمناقشة:** تم تمييز كل قسم بلون وأيقونة خاصة على الخريطة لتسهيل توجيه الفرق الميدانية المختصة بدقة فورية.</p>
+                    </div>
+                </div>
+
+                <!-- اليمين: خريطة Mapbox الشاملة -->
+                <div class="lg:col-span-3 glass-card-gov p-4 rounded-3xl shadow-xl border border-emerald-500/25">
+                    <div id="admin-mapbox-container" class="w-full h-[600px] rounded-2xl relative overflow-hidden"></div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ==================== MAP MODAL FOR GOVERNMENT ==================== -->
+    <div id="gov-map-modal" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+        <div class="glass-card-gov max-w-2xl w-full rounded-3xl p-6 shadow-2xl space-y-4 border border-emerald-500/35 relative">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h3 class="text-base font-black">موقع العطل الجغرافي للبلاغ 📍</h3>
+                    <p class="text-[11px] opacity-75" id="gov-modal-report-info">معاينة موقع البلاغ المرفوع من المواطن وتوجيه الفرق الميدانية</p>
+                </div>
+                <button type="button" onclick="closeGovMapModal()" class="text-rose-600 dark:text-rose-400 font-bold text-xs px-3 py-1.5 bg-rose-500/10 rounded-xl hover:bg-rose-500/25 transition-all">إغلاق ✕</button>
+            </div>
+            
+            <div class="relative w-full h-80 rounded-2xl border border-emerald-500/30 shadow-inner overflow-hidden z-10">
+                <div id="gov-mapbox-container" class="w-full h-full"></div>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <a id="gov-directions-btn" href="#" target="_blank" class="flex-1 py-3 rounded-xl emerald-btn text-white text-xs font-bold text-center transition-all shadow-md flex items-center justify-center gap-2">
+                    <span>🧭 فتح التوجيه الميداني في خرائط Google</span>
+                </a>
+                <button type="button" onclick="closeGovMapModal()" class="px-5 py-3 rounded-xl glass-card-gov hover:opacity-90 text-xs font-bold transition-all border border-emerald-500/30">
+                    تم الإطلاع ✓
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة البلاغات المشابهة (Smart Similar Reports Modal) -->
+    <div id="similar-reports-modal" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+        <div class="glass-card-gov max-w-xl w-full rounded-3xl p-6 shadow-2xl space-y-4 border border-amber-500/40 relative">
+            <div class="flex justify-between items-center border-b border-emerald-500/20 pb-3">
+                <div>
+                    <h3 class="text-base font-black flex items-center gap-2">
+                        <span>⚠️</span> البلاغات الميدانية المشابهة في نفس الموقع
+                    </h3>
+                    <p class="text-[11px] opacity-75">معاينة البلاغات المرتبطة لتحديد الإجراء الميداني الموحد</p>
+                </div>
+                <button type="button" onclick="closeSimilarModal()" class="text-rose-600 font-bold text-xs px-3 py-1.5 bg-rose-500/10 rounded-xl hover:bg-rose-500/25 transition-all">إغلاق ✕</button>
+            </div>
+            
+            <div id="similar-modal-body"></div>
+
+            <div class="pt-2 flex justify-end">
+                <button type="button" onclick="closeSimilarModal()" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md">
+                    تأكيد الإطلاع ✓
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة إنجاز البلاغ ورفع صورة بعد الصيانة (معرض قبل وبعد) -->
+    <div id="complete-report-modal" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+        <div class="glass-card-gov max-w-lg w-full rounded-3xl p-6 shadow-2xl space-y-4 border border-emerald-500/40 relative">
+            <div class="flex justify-between items-center border-b border-emerald-500/20 pb-3">
+                <h3 class="text-base font-black flex items-center gap-2">
+                    <span>🎉</span> إنجاز البلاغ ورفع صورة الصيانة (بعد الإصلاح)
+                </h3>
+                <button type="button" onclick="closeCompleteModal()" class="text-rose-600 font-bold text-xs px-3 py-1.5 bg-rose-500/10 rounded-xl hover:bg-rose-500/25 transition-all">إغلاق ✕</button>
+            </div>
+            
+            <input type="hidden" id="complete-modal-report-id" value="">
+
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-emerald-600 dark:text-emerald-400 mb-1">صورة الموقع بعد الصيانة والإصلاح 📸:</label>
+                    <input type="file" id="after-image-file" accept="image/*" onchange="previewAfterImage(event)" class="w-full dynamic-input border rounded-xl p-2.5 text-xs file:bg-emerald-600 file:text-white file:border-0 file:rounded-lg file:px-3 file:py-1 file:font-bold">
+                    <!-- معاينة الصورة البصرية -->
+                    <div id="after-image-preview-container" class="hidden mt-3 text-center">
+                        <img id="after-image-preview" class="max-h-36 mx-auto rounded-xl border border-emerald-500/30 object-cover shadow-md">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-emerald-600 dark:text-emerald-400 mb-1">تقرير أو ملاحظات إنجاز الفريق الميداني:</label>
+                    <textarea id="complete-modal-note" rows="3" placeholder="اكتب تفاصيل المعالجة والإصلاح الذي تم في الموقع..." class="w-full dynamic-input border rounded-xl p-2.5 text-xs focus:outline-none focus:border-emerald-500"></textarea>
+                </div>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button type="button" onclick="submitCompleteReport()" class="flex-1 py-3 rounded-xl emerald-btn text-white text-xs font-bold text-center transition-all shadow-md">
+                    تأكيد الإنجاز ورفع الصور للمواطن ✓
+                </button>
+                <button type="button" onclick="closeCompleteModal()" class="px-5 py-3 rounded-xl glass-card-gov hover:opacity-90 text-xs font-bold transition-all border border-emerald-500/30">
+                    إلغاء
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- إشعار وصول بلاغ جديد متحرك -->
+    <div id="new-report-toast" class="fixed bottom-6 left-6 z-50 transform translate-y-32 opacity-0 transition-all duration-500 glass-card-gov px-5 py-3 rounded-2xl border border-emerald-500/50 shadow-2xl flex items-center gap-3">
+        <span class="text-2xl">🚨</span>
+        <div>
+            <p class="text-xs font-bold text-emerald-600 dark:text-emerald-400">تنبيه عملياتي جديد</p>
+            <p class="text-[11px] opacity-85">تم استقبال بلاغ جديد وإضافته تلقائياً لقمة الأولوية.</p>
+        </div>
+    </div>
+
+    <!-- إشعار النجاح الاحترافي الفاخر (Toast Notification بدل alert) -->
+    <div id="success-toast-banner" class="fixed top-8 left-1/2 transform -translate-x-1/2 -translate-y-32 opacity-0 transition-all duration-500 z-50 glass-card-gov px-6 py-4 rounded-2xl border border-emerald-500/50 shadow-2xl flex items-center gap-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold">
+        <span class="text-2xl">🎉</span>
+        <div>
+            <p class="text-xs">تم إنجاز الصيانة ورفع صورة ما بعد الإصلاح بنجاح!</p>
+            <p class="text-[10px] text-emerald-100 font-medium">تم تحديث حالة البلاغ وإشعار المواطن فوراً.</p>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1IjoibWF6aW5tYXppbjM0MiIsImEiOiJjbXc0b3E1c2YwOGQyMnpzaTdiZ24zOHM2In0.DAfH3kMEpvIqmqLRwgcrwg';
+
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        let ekgOffset = 0;
+        function animateBg() {
+            ctx.clearRect(0, 0, width, height);
+            ctx.save();
+            ctx.strokeStyle = document.body.classList.contains('dark-mode') ? 'rgba(16, 185, 129, 0.18)' : 'rgba(16, 185, 129, 0.25)';
+            ctx.lineWidth = 2.5;
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = '#10b981';
+
+            ekgOffset += 2;
+            if (ekgOffset > width) ekgOffset = 0;
+
+            [height * 0.3, height * 0.7].forEach((baseY, waveIdx) => {
+                ctx.beginPath();
+                for (let x = 0; x < width; x += 3) {
+                    let freq = 0.015;
+                    let p = (x + ekgOffset * (waveIdx === 0 ? 1 : -1)) * freq;
+                    let mathVal = Math.sin(p);
+                    let spike = Math.exp(-Math.pow((Math.sin(p) * 4) % 3, 2)) * 35 * (Math.sin(p * 0.5) > 0 ? 1 : -0.3);
+                    let y = baseY + mathVal * 15 + spike;
+                    if (x === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            });
+            ctx.restore();
+            requestAnimationFrame(animateBg);
+        }
+        animateBg();
+
+        const cursor = document.getElementById('cursor');
+        const cursorDot = document.getElementById('cursor-dot');
+        window.addEventListener('mousemove', (e) => {
+            cursor.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
+            cursorDot.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
+        });
+
+        function toggleThemeMode() {
+            const body = document.body;
+            body.classList.toggle('dark-mode');
+            const isDark = body.classList.contains('dark-mode');
+            localStorage.setItem('civic_theme_dark', isDark);
+
+            updateThemeButtonUI(isDark);
+            
+            const nightStyle = 'mapbox://styles/mapbox/navigation-night-v1';
+            const dayStyle = 'mapbox://styles/mapbox/streets-v12';
+            
+            if (govMap) {
+                govMap.setStyle(isDark ? nightStyle : dayStyle);
+            }
+            if (fullMap) {
+                fullMap.setStyle(isDark ? nightStyle : dayStyle);
+                fullMap.once('style.load', () => {
+                    initAdminMap();
+                });
+            }
+        }
+
+        function updateThemeButtonUI(isDark) {
+            const icon = document.getElementById('theme-icon');
+            const text = document.getElementById('theme-text');
+            if (isDark) {
+                icon.innerText = '☀️';
+                text.innerText = 'وضع ليلي: تفعيل';
+            } else {
+                icon.innerText = '🌙';
+                text.innerText = 'وضع ليلي: إطفاء';
+            }
+        }
+
+        let cachedGovReports = [];
+        let currentMapCategory = 'all';
+        let currentFilterType = 'all';
+        let currentPriorityFilter = 'all';
+        let govMap = null;
+        let govMarker = null;
+        let isInitialLoad = true;
+
+        function matchesCategory(catText, filterType) {
+            if (!catText) return false;
+            catText = catText.toLowerCase();
+            
+            if (filterType === 'طرق') {
+                return catText.includes('طرق') || catText.includes('طريق') || catText.includes('شارع') || catText.includes('شوارع') || catText.includes('حفرة') || catText.includes('تخسف') || catText.includes('جسر') || catText.includes('جسور');
+            }
+            
+            if (filterType === 'كهرباء') {
+                return catText.includes('كهرباء') || catText.includes('كهربائية') || catText.includes('محول') || catText.includes('محولات') || catText.includes('شبكة') || catText.includes('شبكات') || catText.includes('إنارة') || catText.includes('عمود') || catText.includes('طاقة') || catText.includes('مصباح') || catText.includes('ماس') || catText.includes('شرارة');
+            }
+            
+            if (filterType === 'بلدية') {
+                return catText.includes('بلدية') || catText.includes('نفايات') || catText.includes('نظافة') || catText.includes('أوساخ') || catText.includes('قمامة') || catText.includes('حاوية');
+            }
+            
+            return true;
+        }
+
+        function getMarkerStyle(catText) {
+            if (!catText) return { bg: '#e11d48', icon: '🚨' };
+            catText = catText.toLowerCase();
+            
+            if (catText.includes('طرق') || catText.includes('طريق') || catText.includes('شارع') || catText.includes('شوارع') || catText.includes('حفرة') || catText.includes('تخسف') || catText.includes('جسر')) {
+                return { bg: '#f97316', icon: '🛣️' };
+            }
+            
+            if (catText.includes('كهرباء') || catText.includes('كهربائية') || catText.includes('محول') || catText.includes('محولات') || catText.includes('شبكة') || catText.includes('شبكات') || catText.includes('إنارة') || catText.includes('عمود') || catText.includes('طاقة') || catText.includes('ماس') || catText.includes('شرارة')) {
+                return { bg: '#0ea5e9', icon: '⚡' };
+            }
+            
+            if (catText.includes('بلدية') || catText.includes('نفايات') || catText.includes('نظافة') || catText.includes('أوساخ') || catText.includes('قمامة') || catText.includes('حاوية')) {
+                return { bg: '#10b981', icon: '🧹' };
+            }
+            
+            return { bg: '#e11d48', icon: '🚨' };
+        }
+
+        function showNewReportToast() {
+            const toast = document.getElementById('new-report-toast');
+            if (!toast) return;
+            toast.classList.remove('translate-y-32', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-32', 'opacity-0');
+            }, 4000);
+        }
+
+        function showSuccessToast() {
+            const toast = document.getElementById('success-toast-banner');
+            if (!toast) return;
+            toast.classList.remove('-translate-y-32', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            
+            confetti({
+                particleCount: 120,
+                spread: 100,
+                origin: { y: 0.3 },
+                colors: ['#059669', '#10b981', '#0ea5e9', '#ffffff']
+            });
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('-translate-y-32', 'opacity-0');
+            }, 4500);
+        }
+
+        async function loadGovernmentReports(isManual = false) {
+            try {
+                const response = await fetch("http://127.0.0.1:8000/api/reports");
+                const data = await response.json();
+                const newReports = data.reports || [];
+
+                let existingIds = new Set(cachedGovReports.map(r => r.id));
+                let brandNewReports = newReports.filter(r => !existingIds.has(r.id));
+
+                if (!isInitialLoad && brandNewReports.length > 0) {
+                    showNewReportToast();
+                    prependNewReportsToDOM(brandNewReports);
+                }
+
+                cachedGovReports = newReports;
+                updateStatsAndCounters();
+
+                if (isInitialLoad || isManual) {
+                    isInitialLoad = false;
+                    applyCurrentFilterAndRender();
+                }
+            } catch (e) {
+                console.error("خطأ في جلب البلاغات:", e);
+            }
+        }
+
+        function forceRefreshReports() {
+            loadGovernmentReports(true);
+        }
+
+        function updateStatsAndCounters() {
+            let total = cachedGovReports.length;
+            let pending = cachedGovReports.filter(r => r.status && r.status.includes('قيد')).length;
+            let accepted = cachedGovReports.filter(r => r.status && (r.status.includes('قبول') || r.status.includes('منجز') || r.status.includes('🟢') || r.status.includes('✅'))).length;
+            let rejected = cachedGovReports.filter(r => r.status && (r.status.includes('رفض') || r.status.includes('🔴') || r.status.includes('✕'))).length;
+
+            const totalEl = document.getElementById('gov-total-count');
+            const pendingEl = document.getElementById('gov-pending-count');
+            const acceptedEl = document.getElementById('gov-accepted-count');
+            const rejectedEl = document.getElementById('gov-rejected-count');
+
+            if(totalEl) totalEl.innerText = total;
+            if(pendingEl) pendingEl.innerText = pending;
+            if(acceptedEl) acceptedEl.innerText = accepted;
+            if(rejectedEl) rejectedEl.innerText = rejected;
+
+            const countAll = document.getElementById('count-all');
+            const countRoads = document.getElementById('count-roads');
+            const countElec = document.getElementById('count-elec');
+            const countMun = document.getElementById('count-mun');
+
+            if(countAll) countAll.innerText = total;
+            if(countRoads) countRoads.innerText = cachedGovReports.filter(r => matchesCategory(r.category_ar, 'طرق')).length;
+            if(countElec) countElec.innerText = cachedGovReports.filter(r => matchesCategory(r.category_ar, 'كهرباء')).length;
+            if(countMun) countMun.innerText = cachedGovReports.filter(r => matchesCategory(r.category_ar, 'بلدية')).length;
+        }
+
+        function filterGovReports(type) {
+            currentFilterType = type;
+            ['all', 'pending', 'done', 'most_voted'].forEach(t => {
+                const btn = document.getElementById(`filter-${t}-btn`);
+                if(btn) {
+                    if(t === type) {
+                        btn.className = "px-3 py-1.5 rounded-xl emerald-btn text-white font-bold transition-all shadow-md";
+                    } else {
+                        btn.className = "px-3 py-1.5 rounded-xl glass-card-gov hover:opacity-90 transition-all font-semibold border border-emerald-500/20";
+                    }
+                }
+            });
+            applyCurrentFilterAndRender();
+        }
+
+        function filterPriorityReports(pType) {
+            currentPriorityFilter = pType;
+            ['all', 'critical', 'medium', 'normal'].forEach(t => {
+                const btn = document.getElementById(`priority-${t}-btn`);
+                if(btn) {
+                    if(t === pType) {
+                        btn.className = "px-3 py-1.5 rounded-xl bg-emerald-600 text-white font-bold transition-all shadow-md";
+                    } else {
+                        btn.className = "px-3 py-1.5 rounded-xl glass-card-gov hover:opacity-90 transition-all font-semibold border border-emerald-500/20";
+                    }
+                }
+            });
+            applyCurrentFilterAndRender();
+        }
+
+        function applyCurrentFilterAndRender() {
+            let reports = [...cachedGovReports];
+            
+            if (currentFilterType === 'pending') {
+                reports = reports.filter(r => r.status && r.status.includes('قيد'));
+            } else if (currentFilterType === 'done') {
+                reports = reports.filter(r => r.status && (r.status.includes('قبول') || r.status.includes('منجز') || r.status.includes('🟢') || r.status.includes('✅')));
+            } else if (currentFilterType === 'most_voted') {
+                // ترتيب البلاغات من الأكثر تصويتاً إلى الأقل تصويتاً (تضرر المواطنين)
+                reports.sort((a, b) => (b.upvotes || 1) - (a.upvotes || 1));
+            }
+
+            if (currentPriorityFilter === 'critical') {
+                reports = reports.filter(r => (r.priority_score || 1) >= 5 || (r.ai_priority && r.ai_priority.includes('حرجة')));
+            } else if (currentPriorityFilter === 'medium') {
+                reports = reports.filter(r => ((r.priority_score || 1) === 3) || (r.ai_priority && r.ai_priority.includes('متوسطة')));
+            } else if (currentPriorityFilter === 'normal') {
+                reports = reports.filter(r => ((r.priority_score || 1) === 1) || (r.ai_priority && r.ai_priority.includes('عادية')));
+            }
+
+            // الترتيب: إذا لم يكن الفلتر الحالي "الأكثر تصويتاً"، يتم عرض البلاغات الأجدد أولاً (حسب رقم البلاغ/ID تنازلياً)
+            if (currentFilterType !== 'most_voted') {
+                reports.sort((a, b) => b.id - a.id);
+            }
+
+            renderGovList(reports);
+        }
+
+        function buildReportCardHtml(r) {
+            let lat = parseFloat(r.lat) || 35.4681;
+            let lng = parseFloat(r.lng) || 44.3922;
+
+            let similarBtnHtml = '';
+            if (r.similar_reports && r.similar_reports.trim() !== '') {
+                const countSim = r.similar_reports.split(',').length;
+                similarBtnHtml = `
+                    <button onclick="openSimilarModal('${r.similar_reports}', '${r.report_no}')" class="px-3 py-1 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-bold border border-amber-500/30 hover:bg-amber-500/25 transition-all flex items-center gap-1.5 shadow-sm">
+                        <span>⚠️ تنبيه: يوجد (${countSim}) بلاغات مشابهة</span>
+                    </button>
+                `;
+            }
+
+            let priorityScore = r.priority_score || 1;
+            let priorityClass = priorityScore >= 5 
+                ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30' 
+                : priorityScore >= 3 
+                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30' 
+                : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30';
+
+            let priorityBadgeHtml = `
+                <span class="px-3 py-1 rounded-xl ${priorityClass} font-bold text-xs border flex items-center gap-1.5 shadow-sm">
+                    <span>⚡ الأولوية:</span> <span>${r.ai_priority || 'عادية 🟢'}</span>
+                </span>
+            `;
+
+            let upvotesCount = r.upvotes || 1;
+            let votesBadgeHtml = `
+                <span class="px-3 py-1 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold text-xs border border-amber-500/30 flex items-center gap-1.5 shadow-sm">
+                    <span>🔥 أصوات المتضررين:</span> <span>${upvotesCount} صوت</span>
+                </span>
+            `;
+
+            let afterImagePreviewHtml = '';
+            if (r.after_image_path) {
+                afterImagePreviewHtml = `
+                    <div class="mt-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-3">
+                        <img src="http://127.0.0.1:8000${r.after_image_path}" class="w-16 h-16 rounded-lg object-cover border border-emerald-500/50 shadow">
+                        <div>
+                            <p class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">🎉 تم إرفاق صورة ما بعد الصيانة (معرض قبل وبعد)</p>
+                            <p class="text-[10px] opacity-75">تم تحديث حالة العرض لدى المواطن بنجاح.</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div id="report-card-${r.id}" class="p-6 rounded-2xl glass-card-gov border border-emerald-500/20 shadow-xl space-y-4 animate-fade-in">
+                    <div class="flex flex-col md:flex-row gap-6 items-start justify-between">
+                        <div class="flex gap-4 items-start">
+                            <img src="http://127.0.0.1:8000${r.image_path}" class="w-24 h-24 rounded-xl object-cover border border-emerald-500/30 shadow-md" onerror="this.src='https://via.placeholder.com/100?text=No+Image'">
+                            <div class="space-y-1.5">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-mono text-xs font-bold border border-emerald-500/30">${r.report_no}</span>
+                                    <span class="text-xs font-bold">${r.category_ar}</span>
+                                    ${priorityBadgeHtml}
+                                    ${votesBadgeHtml}
+                                    ${similarBtnHtml}
+                                </div>
+                                <p class="text-xs opacity-75">📅 تاريخ البلاغ: ${r.date_time}</p>
+                                <p class="text-xs opacity-75">الحالة الحالية: <span id="status-text-${r.id}" class="text-amber-500 font-bold">${r.status}</span></p>
+                                
+                                <button onclick="openGovMap(${lat}, ${lng}, '${r.report_no}', '${r.category_ar}')" class="mt-2 px-3 py-1.5 rounded-lg border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold flex items-center gap-1.5 transition-all shadow-sm bg-emerald-500/10 hover:bg-emerald-500/20">
+                                    <span>📍 عرض موقع البلاغ وتوجيه الفرقة</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col gap-3 w-full md:w-80 p-4 rounded-xl border border-emerald-500/20 shadow-inner" style="background: var(--input-bg);">
+                            <div>
+                                <label class="block text-[11px] text-emerald-600 dark:text-emerald-400 mb-1 font-bold">توجيه إلى القسم المختص:</label>
+                                <select id="dept-${r.id}" class="w-full dynamic-input border rounded-lg p-2 text-xs focus:outline-none focus:border-emerald-500">
+                                    <option>قسم صيانة الطرق والشوارع</option>
+                                    <option>قسم طوارئ شبكات الكهرباء</option>
+                                    <option>مديرية البلدية والنظافة العامة</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] text-amber-600 dark:text-amber-400 mb-1 font-bold">ملاحظات الفرقة الميدانية للمواطن:</label>
+                                <input type="text" id="note-${r.id}" placeholder="اكتب ملاحظة أو توجيه ميداني..." class="w-full dynamic-input border rounded-lg p-2 text-xs focus:outline-none focus:border-emerald-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    ${afterImagePreviewHtml}
+
+                    <div class="flex flex-wrap gap-2 pt-3 border-t border-emerald-500/20 justify-end">
+                        <button onclick="updateGovStatus(${r.id}, 'تم قبول البلاغ وتوجيه الفرقة الفنية 🟢')" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md">
+                            قبول البلاغ وتوجيهه ✓
+                        </button>
+                        <button onclick="updateGovStatus(${r.id}, 'تم رفض البلاغ لعدم كفاية الأدلة 🔴')" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition-all shadow-md">
+                            رفض البلاغ ✕
+                        </button>
+                        <button onclick="openCompleteModal(${r.id})" class="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition-all shadow-md">
+                            تم الإنجاز مع صورة الإصلاح 🎉
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function prependNewReportsToDOM(newReports) {
+            const listContainer = document.getElementById('government-reports-list');
+            if (!listContainer) return;
+
+            if (listContainer.innerHTML.includes('جاري جلب البلاغات') || listContainer.innerHTML.includes('لا توجد بلاغات')) {
+                listContainer.innerHTML = '';
+            }
+
+            if (currentFilterType === 'most_voted') {
+                newReports.sort((a, b) => (b.upvotes || 1) - (a.upvotes || 1));
+            } else {
+                newReports.sort((a, b) => b.id - a.id);
+            }
+
+            newReports.forEach(r => {
+                let matchFilter = true;
+                if (currentFilterType === 'pending' && (!r.status || !r.status.includes('قيد'))) matchFilter = false;
+                if (currentFilterType === 'done' && (!r.status || !(r.status.includes('قبول') || r.status.includes('منجز')))) matchFilter = false;
+
+                if (matchFilter) {
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = buildReportCardHtml(r);
+                    listContainer.prepend(tempDiv.firstElementChild);
+                }
+            });
+        }
+
+        function renderGovList(reports) {
+            const listContainer = document.getElementById('government-reports-list');
+            if (reports.length === 0) {
+                listContainer.innerHTML = `<div class="text-center py-16 glass-card-gov rounded-3xl border border-emerald-500/20 opacity-75 text-sm shadow-xl">لا توجد بلاغات مطابقة لفلاتر البحث الحالية.</div>`;
+                return;
+            }
+
+            let activeInputs = {};
+            document.querySelectorAll('[id^="note-"], [id^="dept-"]').forEach(el => {
+                activeInputs[el.id] = el.value;
+            });
+
+            if (currentFilterType !== 'most_voted') {
+                reports.sort((a, b) => b.id - a.id);
+            } else {
+                reports.sort((a, b) => (b.upvotes || 1) - (a.upvotes || 1));
+            }
+
+            let html = '';
+            reports.forEach(r => {
+                html += buildReportCardHtml(r);
+            });
+            listContainer.innerHTML = html;
+
+            Object.keys(activeInputs).forEach(id => {
+                let el = document.getElementById(id);
+                if (el) el.value = activeInputs[id];
+            });
+        }
+
+        function openCompleteModal(id) {
+            document.getElementById('complete-modal-report-id').value = id;
+            document.getElementById('after-image-file').value = '';
+            document.getElementById('after-image-preview-container').classList.add('hidden');
+            document.getElementById('after-image-preview').src = '';
+            document.getElementById('complete-modal-note').value = '';
+            document.getElementById('complete-report-modal').classList.remove('hidden');
+        }
+
+        function previewAfterImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('after-image-preview');
+                if (preview) preview.src = e.target.result;
+                const container = document.getElementById('after-image-preview-container');
+                if (container) container.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function closeCompleteModal() {
+            document.getElementById('complete-report-modal').classList.add('hidden');
+        }
+
+        async function submitCompleteReport() {
+            const id = document.getElementById('complete-modal-report-id').value;
+            const fileInput = document.getElementById('after-image-file');
+            const note = document.getElementById('complete-modal-note').value.trim();
+
+            const formData = new FormData();
+            if (fileInput.files.length > 0) {
+                formData.append('file', fileInput.files[0]);
+            }
+            formData.append('status', 'تم إنجاز الصيانة والمعالجة بنجاح ✅');
+            formData.append('note', note);
+
+            try {
+                const resp = await fetch(`http://127.0.0.1:8000/api/reports/${id}/complete`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const resData = await resp.json();
+                if (resData.success) {
+                    closeCompleteModal();
+                    loadGovernmentReports(true);
+                    showSuccessToast();
+                }
+            } catch (e) {
+                console.error("خطأ في إنجاز البلاغ:", e);
+            }
+        }
+
+        function openSimilarModal(similarIdsStr, currentReportNo) {
+            const ids = similarIdsStr.split(',').map(id => parseInt(id.trim()));
+            const matchedReports = cachedGovReports.filter(rep => ids.includes(rep.id));
+
+            let contentHtml = `
+                <div class="space-y-3 max-h-96 overflow-y-auto">
+                    <p class="text-xs opacity-80">هذه قائمة بالبلاغات الأخرى المقدمة من مواطنين في نفس النطاق الجغرافي للبلاغ (${currentReportNo}):</p>
+            `;
+
+            matchedReports.forEach(rep => {
+                contentHtml += `
+                    <div class="p-3 rounded-xl glass-card-gov border border-emerald-500/20 flex items-center justify-between gap-3 shadow-sm">
+                        <div class="flex items-center gap-3">
+                            <img src="http://127.0.0.1:8000${rep.image_path}" class="w-14 h-14 rounded-lg object-cover border border-emerald-500/30">
+                            <div>
+                                <p class="text-xs font-bold">رقم البلاغ: ${rep.report_no}</p>
+                                <p class="text-[11px] text-emerald-600 dark:text-emerald-400">${rep.category_ar}</p>
+                                <p class="text-[10px] opacity-75">${rep.date_time} - ${rep.location}</p>
+                            </div>
+                        </div>
+                        <span class="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[11px] font-bold border border-amber-500/30">${rep.status}</span>
+                    </div>
+                `;
+            });
+
+            contentHtml += `</div>`;
+            document.getElementById('similar-modal-body').innerHTML = contentHtml;
+            document.getElementById('similar-reports-modal').classList.remove('hidden');
+        }
+
+        function closeSimilarModal() {
+            document.getElementById('similar-reports-modal').classList.add('hidden');
+        }
+
+        function openGovMap(lat, lng, reportNo, category) {
+            document.getElementById('gov-map-modal').classList.remove('hidden');
+            document.getElementById('gov-modal-report-info').innerText = `بلاغ رقم: ${reportNo} - التصنيف: ${category}`;
+            
+            document.getElementById('gov-directions-btn').href = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+
+            setTimeout(() => {
+                const isDark = document.body.classList.contains('dark-mode');
+                if (!govMap) {
+                    mapboxgl.accessToken = 'pk.eyJ1IjoibWF6aW5tYXppbjM0MiIsImEiOiJjbXc0b3E1c2YwOGQyMnpzaTdiZ24zOHM2In0.DAfH3kMEpvIqmqLRwgcrwg';
+                    govMap = new mapboxgl.Map({
+                        container: 'gov-mapbox-container',
+                        style: isDark ? 'mapbox://styles/mapbox/navigation-night-v1' : 'mapbox://styles/mapbox/streets-v12',
+                        center: [lng, lat],
+                        zoom: 16
+                    });
+                } else {
+                    govMap.resize();
+                    govMap.flyTo({ center: [lng, lat], zoom: 16 });
+                }
+
+                if (govMarker) govMarker.remove();
+
+                const styleInfo = getMarkerStyle(category);
+                const el = document.createElement('div');
+                el.style.width = '40px';
+                el.style.height = '40px';
+                el.style.backgroundColor = styleInfo.bg;
+                el.style.border = '3px solid #ffffff';
+                el.style.borderRadius = '50%';
+                el.style.display = 'flex';
+                el.style.alignItems = 'center';
+                el.style.justifyContent = 'center';
+                el.style.cursor = 'pointer';
+                el.innerHTML = `<span style="font-size: 18px;">${styleInfo.icon}</span>`;
+
+                govMarker = new mapboxgl.Marker({
+                    element: el,
+                    anchor: 'center'
+                })
+                .setLngLat([lng, lat])
+                .addTo(govMap);
+
+                govMap.resize();
+            }, 150);
+        }
+
+        function closeGovMapModal() {
+            document.getElementById('gov-map-modal').classList.add('hidden');
+        }
+
+        async function updateGovStatus(id, baseStatus) {
+            const noteInput = document.getElementById(`note-${id}`);
+            const deptSelect = document.getElementById(`dept-${id}`);
+            const fieldNote = noteInput ? noteInput.value.trim() : "";
+            const department = deptSelect ? deptSelect.value : "";
+
+            let finalStatusText = baseStatus;
+            if (fieldNote) {
+                finalStatusText += ` | الملاحظة: ${fieldNote} (${department})`;
+            }
+
+            try {
+                await fetch(`http://127.0.0.1:8000/api/reports/${id}/status`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ status: finalStatusText })
+                });
+
+                const targetRep = cachedGovReports.find(r => r.id === id);
+                if (targetRep) {
+                    targetRep.status = finalStatusText;
+                }
+                const statusSpan = document.getElementById(`status-text-${id}`);
+                if (statusSpan) {
+                    statusSpan.innerText = finalStatusText;
+                }
+                updateStatsAndCounters();
+            } catch (e) {
+                console.error("خطأ في تحديث الحالة:", e);
+            }
+        }
+
+        let categoriesChartInstance = null;
+        let statusChartInstance = null;
+
+        function switchAdminTab(tab) {
+            ['management', 'analytics', 'map-view'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                document.getElementById(`nav-${t}`).className = "px-4 py-2 rounded-xl text-xs font-bold transition-all hover:text-emerald-600";
+            });
+            document.getElementById(`tab-${tab}`).classList.remove('hidden');
+            document.getElementById(`nav-${tab}`).className = "px-4 py-2 rounded-xl text-xs font-bold transition-all bg-emerald-600 text-white shadow-md";
+
+            if (tab === 'map-view') initAdminMap();
+            if (tab === 'analytics') loadAnalyticsCharts();
+        }
+
+        async function loadAnalyticsCharts() {
+            try {
+                const resp = await fetch("http://127.0.0.1:8000/api/analytics");
+                const data = await resp.json();
+                if (data.success) {
+                    const stats = data.analytics;
+                    
+                    const catLabels = stats.categories_breakdown.map(c => c.category_ar);
+                    const catCounts = stats.categories_breakdown.map(c => c.count);
+
+                    const ctx1 = document.getElementById('categoriesChart').getContext('2d');
+                    if (categoriesChartInstance) categoriesChartInstance.destroy();
+                    categoriesChartInstance = new Chart(ctx1, {
+                        type: 'doughnut',
+                        data: {
+                            labels: catLabels,
+                            datasets: [{
+                                data: catCounts,
+                                backgroundColor: ['#10b981', '#0ea5e9', '#f97316', '#e11d48', '#8b5cf6'],
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { position: 'bottom', labels: { font: { family: 'Cairo' } } } }
+                        }
+                    });
+
+                    const ctx2 = document.getElementById('statusChart').getContext('2d');
+                    if (statusChartInstance) statusChartInstance.destroy();
+                    statusChartInstance = new Chart(ctx2, {
+                        type: 'bar',
+                        data: {
+                            labels: ['إجمالي البلاغات', 'المكتملة والمنجزة', 'الحرجة وعاجلة'],
+                            datasets: [{
+                                label: 'عدد البلاغات',
+                                data: [stats.total_reports, stats.completed_reports, stats.critical_reports],
+                                backgroundColor: ['#10b981', '#0ea5e9', '#e11d48'],
+                                borderRadius: 10
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: { y: { beginAtZero: true } }
+                        }
+                    });
+                }
+            } catch (e) {
+                console.error("خطأ في تحميل التحليلات:", e);
+            }
+        }
+
+        let fullMap = null;
+        let adminMarkers = [];
+
+        function clearAdminMarkers() {
+            adminMarkers.forEach(m => m.remove());
+            adminMarkers = [];
+        }
+
+        function setMapCategoryFilter(cat) {
+            currentMapCategory = cat;
+            
+            document.querySelectorAll('.cat-filter-btn').forEach(btn => {
+                const badge = btn.querySelector('.count-badge');
+                if (btn.getAttribute('data-cat') === cat) {
+                    btn.className = "w-full flex items-center justify-between p-3.5 rounded-2xl bg-emerald-600 text-white text-xs font-bold transition-all shadow-md cat-filter-btn";
+                    if(badge) badge.className = "count-badge bg-white text-emerald-950 px-2.5 py-1 rounded-xl text-xs font-black shadow-sm";
+                } else {
+                    btn.className = "w-full flex items-center justify-between p-3.5 rounded-2xl glass-card-gov hover:opacity-90 text-xs font-bold transition-all border border-emerald-500/20 cat-filter-btn";
+                    if(badge) badge.className = "count-badge bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-xl text-xs font-black shadow-sm border border-emerald-500/30";
+                }
+            });
+
+            initAdminMap();
+        }
+
+        function initAdminMap() {
+            setTimeout(() => {
+                const isDark = document.body.classList.contains('dark-mode');
+                if (!fullMap) {
+                    fullMap = new mapboxgl.Map({
+                        container: 'admin-mapbox-container',
+                        style: isDark ? 'mapbox://styles/mapbox/navigation-night-v1' : 'mapbox://styles/mapbox/streets-v12',
+                        center: [44.3922, 35.4681],
+                        zoom: 13
+                    });
+                }
+
+                clearAdminMarkers();
+
+                let filteredReports = cachedGovReports;
+                if (currentMapCategory !== 'all') {
+                    filteredReports = cachedGovReports.filter(r => matchesCategory(r.category_ar, currentMapCategory));
+                }
+
+                filteredReports.forEach(r => {
+                    let lat = parseFloat(r.lat) || 35.4681;
+                    let lng = parseFloat(r.lng) || 44.3922;
+
+                    const styleInfo = getMarkerStyle(r.category_ar);
+
+                    const el = document.createElement('div');
+                    el.style.width = '38px';
+                    el.style.height = '38px';
+                    el.style.backgroundColor = styleInfo.bg;
+                    el.style.color = '#ffffff';
+                    el.style.borderRadius = '50%';
+                    el.style.border = '3px solid #ffffff';
+                    el.style.display = 'flex';
+                    el.style.alignItems = 'center';
+                    el.style.justifyContent = 'center';
+                    el.style.cursor = 'pointer';
+                    el.style.fontSize = '16px';
+                    el.innerHTML = styleInfo.icon;
+
+                    const popupHtml = `
+                        <div class="p-3 text-right space-y-2 max-w-xs">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold">بلاغ: ${r.report_no}</span>
+                                <span class="text-[10px] text-amber-600 font-bold">${r.status}</span>
+                            </div>
+                            <h4 class="font-bold text-xs text-slate-900">${r.category_ar}</h4>
+                            <p class="text-[11px] text-slate-600">📅 ${r.date_time}</p>
+                            <img src="http://127.0.0.1:8000${r.image_path}" class="w-full h-24 object-cover rounded-lg border border-slate-200" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
+                            <button onclick="openGovMap(${lat}, ${lng}, '${r.report_no}', '${r.category_ar}')" class="w-full py-1.5 rounded-lg bg-sky-600 text-white text-xs font-bold text-center shadow-md">
+                                معاينة الموقع بدقة 📍
+                            </button>
+                        </div>
+                    `;
+
+                    const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
+                        .setLngLat([lng, lat])
+                        .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(popupHtml))
+                        .addTo(fullMap);
+
+                    adminMarkers.push(marker);
+                });
+
+                fullMap.resize();
+            }, 200);
+        }
+
+        window.onload = function() {
+            const savedTheme = localStorage.getItem('civic_theme_dark');
+            if (savedTheme === 'true') {
+                document.body.classList.add('dark-mode');
+                updateThemeButtonUI(true);
+            } else {
+                updateThemeButtonUI(false);
+            }
+
+            loadGovernmentReports(false);
+            setInterval(() => loadGovernmentReports(false), 4000);
+        };
+    </script>
+</body>
+</html>
