@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="html-root">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نبض مدينتي / CityPulse AI - بوابة المواطن</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <!-- Mapbox GL JS CSS & JS -->
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css" rel="stylesheet" />
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Inter:wght@300;400;600;700&display=swap');
+        
+        /* الوضع الافتراضي: الفاتح (Light Mode) */
+        :root {
+            --bg-main: linear-gradient(to bottom right, #f8fafc, #f0fdf4, #e6fffa);
+            --text-main: #1e293b;
+            --card-bg: rgba(255, 255, 255, 0.92);
+            --card-border: rgba(16, 185, 129, 0.25);
+            --card-shadow: 0 20px 40px rgba(16, 185, 129, 0.1);
+            --header-bg: rgba(255, 255, 255, 0.88);
+            --input-bg: #f8fafc;
+            --input-border: #cbd5e1;
+            --input-text: #1e293b;
+            --logout-bg: #f8fafc;
+            --logout-border: #cbd5e1;
+            --logout-text: #e11d48;
+            --logout-hover: #fff1f2;
+        }
+
+        /* الوضع الليلي (Dark Mode) الفاخر */
+        body.dark-mode {
+            --bg-main: radial-gradient(circle at center, #0f172a 0%, #060913 100%);
+            --text-main: #f8fafc;
+            --card-bg: rgba(15, 23, 42, 0.90);
+            --card-border: rgba(16, 185, 129, 0.35);
+            --card-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
+            --header-bg: rgba(15, 23, 42, 0.88);
+            --input-bg: #1e293b;
+            --input-border: #334155;
+            --input-text: #ffffff;
+            --logout-bg: #1e293b;
+            --logout-border: #334155;
+            --logout-text: #fb7185;
+            --logout-hover: rgba(225, 29, 72, 0.2);
+        }
+
+        body {
+            font-family: 'Cairo', 'Inter', sans-serif;
+            background: var(--bg-main);
+            color: var(--text-main);
+            overflow-x: hidden;
+            cursor: default;
+            min-height: 100vh;
+            transition: background 0.4s ease, color 0.4s ease;
+        }
+
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.95;
+        }
+
+        .custom-cursor {
+            pointer-events: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 24px;
+            height: 24px;
+            border: 2px solid #059669;
+            background: rgba(16, 185, 129, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.2s, height 0.2s, background-color 0.2s;
+            z-index: 9999;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
+        }
+        .custom-cursor-dot {
+            pointer-events: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 6px;
+            height: 6px;
+            background-color: #059669;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10000;
+        }
+
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            box-shadow: var(--card-shadow);
+            transform-style: preserve-3d;
+            perspective: 1000px;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .glass-card:hover {
+            border-color: rgba(16, 185, 129, 0.6);
+            transform: translateY(-6px) scale(1.01);
+            box-shadow: 0 30px 60px rgba(16, 185, 129, 0.22);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(2deg); }
+        }
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.1); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .ekg-image-overlay {
+            clip-path: inset(0 100% 0 0);
+            animation: revealEkgImage 3.2s infinite ease-in-out;
+        }
+
+        @keyframes revealEkgImage {
+            0% { clip-path: inset(0 100% 0 0); }
+            50% { clip-path: inset(0 0% 0 0); }
+            80% { clip-path: inset(0 0% 0 0); }
+            100% { clip-path: inset(0 100% 0 0); }
+        }
+
+        .bg-glow-emerald {
+            position: absolute;
+            top: 10%;
+            left: 15%;
+            width: 450px;
+            height: 450px;
+            background: rgba(16, 185, 129, 0.15);
+            filter: blur(120px);
+            border-radius: 50%;
+            animation: pulseGlow 6s ease-in-out infinite;
+            z-index: -1;
+        }
+        .bg-glow-sky {
+            position: absolute;
+            bottom: 10%;
+            right: 15%;
+            width: 500px;
+            height: 500px;
+            background: rgba(14, 165, 233, 0.15);
+            filter: blur(140px);
+            border-radius: 50%;
+            animation: pulseGlow 8s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        .emerald-gradient-text {
+            background: linear-gradient(135deg, #059669 0%, #10b981 50%, #0ea5e9 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 2px 10px rgba(16, 185, 129, 0.2));
+        }
+        .emerald-btn {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            color: #ffffff;
+            font-weight: 800;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(16, 185, 129, 0.3);
+        }
+        .emerald-btn:hover {
+            opacity: 0.95;
+            transform: scale(1.03);
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.45);
+        }
+
+        .dynamic-input {
+            background-color: var(--input-bg);
+            border-color: var(--input-border);
+            color: var(--input-text);
+        }
+
+        .logout-btn-custom {
+            background-color: var(--logout-bg);
+            border: 1px solid var(--logout-border);
+            color: var(--logout-text);
+            transition: all 0.3s ease;
+        }
+        .logout-btn-custom:hover {
+            background-color: var(--logout-hover);
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="min-h-screen relative">
+
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="custom-cursor" id="cursor"></div>
+    <div class="custom-cursor-dot" id="cursor-dot"></div>
+
+    <div class="bg-glow-emerald"></div>
+    <div class="bg-glow-sky"></div>
+
+    <!-- ==================== LOGIN SCREEN ==================== -->
+    <div id="login-screen" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-2xl flex items-center justify-center p-4">
+        <div class="glass-card max-w-md w-full rounded-3xl p-8 shadow-2xl space-y-6 border border-emerald-500/30 animate-fade-in relative overflow-hidden">
+            <div class="text-center space-y-4 relative z-10">
+                <div class="w-full h-32 mx-auto flex items-center justify-center p-2 rounded-2xl border border-emerald-500/30 shadow-xl relative overflow-hidden" style="background: var(--card-bg);">
+                    <img src="logo.png" alt="نبض مدينتي" class="absolute inset-0 w-full h-full object-contain p-2 z-10" onerror="this.src='https://via.placeholder.com/300x100?text=Logo.png+Missing'">
+                    <img src="logo-ekg.png" alt="نبض مدينتي مع التخطيط" class="absolute inset-0 w-full h-full object-contain p-2 z-20 ekg-image-overlay" onerror="this.src='https://via.placeholder.com/300x100?text=Logo-EKG.png+Missing'">
+                </div>
+                <div>
+                    <h1 class="text-2xl font-black emerald-gradient-text tracking-wide">نبض مدينتي</h1>
+                    <p class="text-xs opacity-75 mt-1">منصة بلاغات المدن الذكية - سجل دخولك للمتابعة</p>
+                </div>
+            </div>
+
+            <form onsubmit="handleLogin(event)" class="space-y-4 relative z-10">
+                <div>
+                    <label class="block text-xs font-semibold mb-1">الاسم الكامل</label>
+                    <input type="text" id="user-name-input" required placeholder="مثال: مازن هجران" class="w-full dynamic-input border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500 transition-all">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold mb-1">رقم الهاتف النقال</label>
+                    <input type="tel" id="user-phone-input" required placeholder="0770xxxxxxx" class="w-full dynamic-input border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500 transition-all">
+                </div>
+                <button type="submit" class="w-full py-3.5 rounded-xl emerald-btn shadow-lg text-sm">
+                    دخول إلى المنصة وتفعيل الحساب ✨
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== WELCOME BANNER ==================== -->
+    <div id="welcome-banner" class="hidden fixed top-6 left-1/2 transform -translate-x-1/2 z-50 bg-gradient-to-r from-emerald-600 via-teal-600 to-sky-600 text-white px-6 py-3 rounded-2xl shadow-2xl border border-white/30 animate-slide-down flex items-center gap-3 font-bold">
+        <span class="text-2xl">🎉</span>
+        <div>
+            <p id="welcome-msg-title" class="text-xs">أهلاً بك يا قهرمان!</p>
+            <p class="text-[10px] text-emerald-100 font-extrabold opacity-90">تم تسجيل دخولك بنجاح إلى منصة نبض مدينتي</p>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN APP CONTAINER ==================== -->
+    <div id="main-app" class="hidden min-h-screen flex flex-col">
+        
+        <header class="border-b border-emerald-500/20 backdrop-blur-md sticky top-0 z-40 shadow-sm" style="background-color: var(--header-bg);">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+                <div class="flex items-center space-x-3 space-x-reverse">
+                    <div class="h-12 w-28 px-1 flex items-center justify-center rounded-xl border border-emerald-500/30 shadow-md relative overflow-hidden" style="background: var(--card-bg);">
+                        <img src="logo.png" alt="Logo" class="absolute inset-0 w-full h-full object-contain p-1 z-10" onerror="this.src='https://via.placeholder.com/150x50?text=Logo'">
+                        <img src="logo-ekg.png" alt="Logo EKG" class="absolute inset-0 w-full h-full object-contain p-1 z-20 ekg-image-overlay" onerror="this.src='https://via.placeholder.com/150x50?text=Logo-EKG'">
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold emerald-gradient-text">نبض مدينتي</h1>
+                        <p class="text-[10px] opacity-75">منصة بلاغات المدن الذكية</p>
+                    </div>
+                </div>
+
+                <nav class="hidden lg:flex items-center space-x-1 space-x-reverse p-1.5 rounded-2xl border border-emerald-500/20 bg-emerald-500/5">
+                    <button onclick="switchTab('home')" id="nav-home" class="px-4 py-2 rounded-xl text-xs font-semibold transition-all bg-emerald-600 text-white shadow-md">الرئيسية</button>
+                    <button onclick="switchTab('report')" id="nav-report" class="px-4 py-2 rounded-xl text-xs font-semibold transition-all hover:text-emerald-600">إبلاغ عن مشكلة</button>
+                    <button onclick="switchTab('my-reports')" id="nav-my-reports" class="px-4 py-2 rounded-xl text-xs font-semibold transition-all hover:text-emerald-600">بلاغاتي والتصويت</button>
+                    <button onclick="switchTab('stats')" id="nav-stats" class="px-4 py-2 rounded-xl text-xs font-semibold transition-all hover:text-emerald-600">الإحصائيات</button>
+                    <button onclick="switchTab('emergency')" id="nav-emergency" class="px-4 py-2 rounded-xl text-xs font-semibold transition-all hover:text-emerald-600">دليل الطوارئ</button>
+                </nav>
+
+                <div class="flex items-center gap-3">
+                    <!-- زر الوضع الليلي والنهاري (تفعيل وإطفاء) -->
+                    <button onclick="toggleThemeMode()" id="theme-toggle-btn" class="px-3 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-xs font-bold transition-all hover:scale-105 flex items-center gap-1.5 shadow-sm" style="color: var(--text-main);" title="تبديل المظهر">
+                        <span id="theme-icon">🌙</span> <span id="theme-text">وضع ليلي: إطفاء</span>
+                    </button>
+
+                    <div class="text-right hidden sm:block">
+                        <p id="display-user-name" class="text-xs font-bold">مرحباً</p>
+                        <p class="text-[10px] text-emerald-600 font-medium">✨ مواطن نشط وموثق</p>
+                    </div>
+                    <!-- زر الخروج -->
+                    <button onclick="logout()" class="px-3 py-2 rounded-xl logout-btn-custom text-xs font-medium transition-all shadow-sm">
+                        خروج
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-1 w-full relative space-y-16">
+
+            <!-- ==================== TAB 0: HOME ==================== -->
+            <section id="tab-home" class="space-y-16 animate-fade-in relative">
+                
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+                    <div class="lg:col-span-7 space-y-6 text-right z-10">
+                        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 text-xs font-semibold shadow-sm animate-pulse">
+                            🌐 المستقبل الرقمي لإدارة المدن الذكية في العراق
+                        </div>
+                        <h2 class="text-4xl sm:text-6xl font-black tracking-tight leading-tight">
+                            مدينتك الأذكى، ابلغ عن الأعطال <span class="emerald-gradient-text">بكل سرعة وذكاء</span>
+                        </h2>
+                        <p class="opacity-85 text-base sm:text-lg max-w-xl leading-relaxed">
+                            منصة <strong>نبض مدينتي (CityPulse AI)</strong> هي نظام هندسي تفاعلي متكامل يربط المواطن بغرف العمليات البلدية مباشرة، مستخدمةً أحدث خوارزميات الذكاء الاصطناعي والتحديد الجغرافي لتحليل المشاكل وإنجازها فوراً.
+                        </p>
+                        <div class="flex flex-wrap gap-4 pt-4">
+                            <button onclick="switchTab('report')" class="px-8 py-4 rounded-2xl emerald-btn shadow-xl transition-all hover:scale-105 active:scale-95 text-base flex items-center gap-2">
+                                <span>ابدأ بإرسال بلاغ الآن</span> 🚀
+                            </button>
+                            <button onclick="switchTab('stats')" class="px-8 py-4 rounded-2xl glass-card hover:opacity-90 border border-emerald-500/30 font-bold text-base transition-all hover:scale-105 active:scale-95 shadow-md">
+                                عرض إحصائيات المدينة 📊
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-5 relative flex items-center justify-center py-10">
+                        <div class="absolute inset-0 bg-gradient-to-tr from-emerald-400/20 to-sky-400/20 rounded-3xl blur-3xl animate-pulse"></div>
+                        
+                        <div class="glass-card p-8 rounded-3xl relative z-10 animate-float text-center border border-emerald-500/30 shadow-2xl max-w-sm w-full space-y-6">
+                            
+                            <div class="w-full h-36 mx-auto flex items-center justify-center p-3 rounded-2xl border border-emerald-500/30 shadow-xl relative overflow-hidden" style="background: var(--card-bg);">
+                                <img src="logo.png" alt="Logo" class="absolute inset-0 w-full h-full object-contain p-2 z-10" onerror="this.src='https://via.placeholder.com/300x100?text=Logo.png+Missing'">
+                                <img src="logo-ekg.png" alt="Logo EKG" class="absolute inset-0 w-full h-full object-contain p-2 z-20 ekg-image-overlay" onerror="this.src='https://via.placeholder.com/300x100?text=Logo-EKG.png+Missing'">
+                            </div>
+
+                            <div class="space-y-1">
+                                <h3 class="text-base font-black emerald-gradient-text">الشعار الرسمي المعتمد</h3>
+                                <p class="text-[11px] opacity-70">نظام إدارة البلاغات والمدن الذكية المتكامل</p>
+                            </div>
+                        </div>
+
+                        <div class="absolute -top-6 -right-6 sm:-right-10 glass-card px-4 py-2.5 rounded-2xl flex items-center gap-2 z-30 animate-float border border-emerald-500/30 shadow-xl">
+                            <span class="text-lg">🌍</span>
+                            <div>
+                                <p class="text-[10px] opacity-70">تغطية شاملة</p>
+                                <p class="text-xs font-bold text-emerald-600">مدن ذكية متكاملة</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- أهداف ورؤية المنصة الإستراتيجية -->
+                <div class="glass-card rounded-3xl p-8 space-y-8 border border-emerald-500/30 shadow-xl relative z-10">
+                    <div class="text-center max-w-2xl mx-auto space-y-3">
+                        <span class="px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-700 text-xs font-bold">لماذا أنشأنا نبض مدينتي؟</span>
+                        <h3 class="text-2xl sm:text-3xl font-black">أهداف ورؤية المنصة الإستراتيجية</h3>
+                        <p class="text-xs sm:text-sm opacity-80 leading-relaxed">نهدف إلى القضاء على الروتين الإداري التقليدي وبناء جسر ثقة رقمي بين المواطن والدوائر الخدمية عبر آليات متطورة.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div class="p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 space-y-3">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-lg">🎯</div>
+                            <h4 class="font-bold text-sm">الهدف الأساسي</h4>
+                            <p class="text-xs opacity-80 leading-relaxed">تحويل البلاغات البلدية إلى مهام آلية فورية توجه للفرق الميدانية المختصة دون تأخير.</p>
+                        </div>
+                        <div class="p-6 rounded-2xl bg-sky-500/5 border border-sky-500/20 space-y-3">
+                            <div class="w-10 h-10 rounded-xl bg-sky-600 text-white flex items-center justify-center font-bold text-lg">💡</div>
+                            <h4 class="font-bold text-sm">الذكاء الاصطناعي</h4>
+                            <p class="text-xs opacity-80 leading-relaxed">تصنيف الأعطال آلياً بناءً على الصور المرفوعة ودرجة خطورتها لتحديد الأولوية القصوى.</p>
+                        </div>
+                        <div class="p-6 rounded-2xl bg-teal-500/5 border border-teal-500/20 space-y-3">
+                            <div class="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center font-bold text-lg">📍</div>
+                            <h4 class="font-bold text-sm">التتبع الجغرافي</h4>
+                            <p class="text-xs opacity-80 leading-relaxed">التقاط إحداثيات GPS بدقة مترية لتوجيه الآليات مباشرة إلى موقع العطل دون وصف معقد.</p>
+                        </div>
+                        <div class="p-6 rounded-2xl bg-amber-500/5 border border-amber-500/20 space-y-3">
+                            <div class="w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center font-bold text-lg">🌟</div>
+                            <h4 class="font-bold text-sm">الشفافية الكاملة</h4>
+                            <p class="text-xs opacity-80 leading-relaxed">إتاحة سجل البلاغات للمواطن لمتابعة حالة إنجاز الشكوى خطوة بخطوة بكل شفافية.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- دليل الاستخدام المبسط -->
+                <div class="space-y-8 relative z-10">
+                    <div class="text-center max-w-2xl mx-auto space-y-2">
+                        <span class="px-4 py-1.5 rounded-full bg-sky-500/10 text-sky-700 text-xs font-bold">دليل الاستخدام المبسط</span>
+                        <h3 class="text-2xl sm:text-3xl font-black">كيف يعمل نظام نبض مدينتي؟</h3>
+                        <p class="text-xs opacity-75">أربع خطوات بسيطة تفصلك عن معالجة المشكلة الخدمية في منطقتك</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div class="glass-card p-6 rounded-3xl space-y-4 relative overflow-hidden">
+                            <div class="absolute -top-4 -left-4 w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center text-emerald-600 font-black text-xl">1</div>
+                            <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center text-xl font-bold animate-float">📸</div>
+                            <h4 class="font-bold text-base">التقاط المشكلة</h4>
+                            <p class="text-xs opacity-80 leading-relaxed">التقط صورة واضحة للعطل (حفرة في الشارع، أعمدة كهربائية، محولات، أو نفايات).</p>
+                        </div>
+                        <div class="glass-card p-6 rounded-3xl space-y-4 relative overflow-hidden">
+                            <div class="absolute -top-4 -left-4 w-16 h-16 bg-sky-500/10 rounded-full flex items-center justify-center text-sky-600 font-black text-xl">2</div>
+                            <div class="w-12 h-12 rounded-2xl bg-sky-500/10 text-sky-600 flex items-center justify-center text-xl font-bold animate-float">📍</div>
+                            <h4 class="font-bold text-base">تحديد الموقع GPS أو يدوياً</h4>
+                            <p class="text-xs opacity-80 leading-relaxed">حدد موقعك الحالي تلقائياً عبر الأقمار الصناعية أو اختره بدقة من الخريطة اليدوية.</p>
+                        </div>
+                        <div class="glass-card p-6 rounded-3xl space-y-4 relative overflow-hidden">
+                            <div class="absolute -top-4 -left-4 w-16 h-16 bg-teal-500/10 rounded-full flex items-center justify-center text-teal-600 font-black text-xl">3</div>
+                            <div class="w-12 h-12 rounded-2xl bg-teal-500/10 text-teal-600 flex items-center justify-center text-xl font-bold animate-float">🤖</div>
+                            <h4 class="font-bold text-base">التحليل والتوجيه الآلي</h4>
+                            <p class="text-xs opacity-80 leading-relaxed">الذكاء الاصطناعي يصنف البلاغ آلياً ويوجهه مباشرة إلى غرفة العمليات المختصة.</p>
+                        </div>
+                        <div class="glass-card p-6 rounded-3xl space-y-4 relative overflow-hidden">
+                            <div class="absolute -top-4 -left-4 w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center text-amber-600 font-black text-xl">4</div>
+                            <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center text-xl font-bold animate-float">✅</div>
+                            <h4 class="font-bold text-base">المعالجة والإنجاز</h4>
+                            <p class="text-xs opacity-80 leading-relaxed">تنزل الفرق الفنية للموقع لمعالجة المشكلة، ويصلك إشعار فوري باكتمال الصيانة بنجاح.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- مميزات إضافية -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10 pt-4">
+                    <div class="glass-card p-6 rounded-3xl space-y-3">
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center text-xl font-bold shadow-sm">⚡</div>
+                        <h3 class="text-lg font-bold">استجابة فائقة السرعة</h3>
+                        <p class="text-xs opacity-80 leading-relaxed">ربط مباشر مع غرف العمليات لتقليل وقت الاستجابة للبلاغات الطارئة إلى أقل من 24 ساعة.</p>
+                    </div>
+                    <div class="glass-card p-6 rounded-3xl space-y-3">
+                        <div class="w-12 h-12 rounded-2xl bg-sky-500/10 text-sky-600 flex items-center justify-center text-xl font-bold shadow-sm">🛡️</div>
+                        <h3 class="text-lg font-bold">أمن وموثوقية عالية</h3>
+                        <p class="text-xs opacity-80 leading-relaxed">حفظ بيانات المواطنين وتشفير سجلات البلاغات لضمان الخصوصية التامة ومنع البلاغات الوهمية.</p>
+                    </div>
+                    <div class="glass-card p-6 rounded-3xl space-y-3">
+                        <div class="w-12 h-12 rounded-2xl bg-teal-500/10 text-teal-600 flex items-center justify-center text-xl font-bold shadow-sm">📊</div>
+                        <h3 class="text-lg font-bold">تقارير وإحصائيات حية</h3>
+                        <p class="text-xs opacity-80 leading-relaxed">لوحة تحكم ذكية تعرض مؤشرات الأداء الخدمي ونسب الإنجاز في أحياء المدينة بشكل لحظي.</p>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- ==================== TAB 1: REPORT ISSUE (With Instant AI Preview) ==================== -->
+            <section id="tab-report" class="hidden space-y-8 animate-fade-in">
+                <div class="text-center max-w-2xl mx-auto space-y-2">
+                    <h2 class="text-3xl font-black">إرسال بلاغ خدمي جديد</h2>
+                    <p class="text-xs opacity-75">ارفع الصورة وسيقوم الذكاء الاصطناعي بتحليلها وتحديد التصنيف ورصدها تلقائياً</p>
+                </div>
+
+                <div class="max-w-2xl mx-auto glass-card rounded-3xl p-6 sm:p-8 shadow-2xl border border-emerald-500/30 relative">
+                    
+                    <div id="error-alert-banner" class="hidden mb-6 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-700 text-xs sm:text-sm font-bold flex items-center gap-3 animate-slide-down shadow-sm">
+                        <span class="text-2xl">⚠️</span>
+                        <div>
+                            <p class="font-black">تنبيه بخصوص البيانات الناقصة!</p>
+                            <p id="error-alert-msg" class="text-[11px] font-medium mt-0.5">يرجى إرفاق صورة للمشكلة قبل إرسال البلاغ.</p>
+                        </div>
+                    </div>
+
+                    <div id="inpage-success-banner" class="hidden mb-6 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 text-xs sm:text-sm font-bold flex items-center gap-3 animate-slide-down">
+                        <span class="text-2xl">🎉</span>
+                        <div>
+                            <p class="font-black">تم إرسال البلاغ وتحليله بنجاح!</p>
+                            <p class="text-[11px] font-medium mt-0.5">تم رصد وتصنيف المشكلة آلياً وجاري توجيهها لغرفة العمليات...</p>
+                        </div>
+                    </div>
+
+                    <form id="report-form" onsubmit="submitReport(event)" class="space-y-6">
+                        <div>
+                            <label class="block text-xs font-semibold mb-2">صورة المشكلة الميدانية</label>
+                            <div class="border-2 border-dashed border-emerald-500/40 hover:border-emerald-500 rounded-2xl p-6 text-center cursor-pointer transition-all bg-emerald-500/5 group">
+                                <input type="file" id="issue-image" accept="image/*" class="hidden" onchange="previewImage(event)">
+                                <div onclick="document.getElementById('issue-image').click()" class="space-y-2">
+                                    <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-600 mx-auto flex items-center justify-center text-xl group-hover:scale-110 transition-transform">📷</div>
+                                    <p class="text-xs font-medium">انقر لرفع صورة أو اسحبها هنا للتحليل الفوري</p>
+                                    <div id="image-preview-container" class="hidden mt-4">
+                                        <img id="image-preview" class="max-h-40 mx-auto rounded-xl border border-emerald-500/30 object-cover">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ⚡ نظام المعاينة الذكية الفورية (Instant AI Preview) الجديد -->
+                            <div id="ai-preview-box" class="hidden mt-4 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-xs space-y-2 animate-fade-in shadow-sm">
+                                <p class="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                                    <span>✨</span> نتائج المعاينة الذكية الفورية (Instant AI Preview):
+                                </p>
+                                <div id="ai-preview-content" class="space-y-1 text-[11px] opacity-90">
+                                    جاري فحص الصورة...
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold mb-2">تصنيف العطل الخدمي (تحديد تلقائي بالذكاء الاصطناعي أو اختيار يدوي)</label>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                <button type="button" onclick="selectCategory('potholes', this)" class="category-btn p-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500 text-center transition-all flex flex-col items-center gap-1 text-xs">
+                                    ⚠️ <span class="font-medium">حفر وشوارع</span>
+                                </button>
+                                <button type="button" onclick="selectCategory('electricity', this)" class="category-btn p-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500 text-center transition-all flex flex-col items-center gap-1 text-xs">
+                                    ⚡ <span>كهرباء وإنارة</span>
+                                </button>
+                                <button type="button" onclick="selectCategory('waste', this)" class="category-btn p-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500 text-center transition-all flex flex-col items-center gap-1 text-xs">
+                                    🗑️ <span>نفايات وتلوث</span>
+                                </button>
+                                <button type="button" onclick="selectCategory('other', this)" class="category-btn p-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500 text-center transition-all flex flex-col items-center gap-1 text-xs">
+                                    ❓ <span>أخرى</span>
+                                </button>
+                            </div>
+
+                            <!-- حقل إضافي يظهر فقط عند اختيار "أخرى" -->
+                            <div id="other-desc-container" class="hidden mt-3 animate-fade-in">
+                                <label class="block text-xs font-semibold mb-1 text-emerald-600 dark:text-emerald-400">يرجى توضيح المشكلة بالتفصيل (أخرى):</label>
+                                <input type="text" id="other-issue-input" placeholder="اكتب وصفاً دقيقاً للمشكلة غير المصنفة..." class="w-full dynamic-input border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-emerald-500 transition-all">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold mb-2">الموقع الجغرافي (GPS أو تحديد يدوي من الخريطة)</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="location-input" required placeholder="حدد الموقع آلياً أو يدوياً من الخريطة..." class="flex-1 dynamic-input border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-emerald-500 transition-all">
+                                <button type="button" onclick="detectLocation()" class="px-3 py-3 rounded-xl border border-emerald-500/30 text-emerald-700 font-medium text-xs transition-all flex items-center gap-1 hover:scale-105 bg-emerald-500/5">
+                                    📍 موقعي الحالي
+                                </button>
+                                <button type="button" onclick="openMapModal()" class="px-3 py-3 rounded-xl border border-emerald-500/30 text-emerald-800 font-medium text-xs transition-all flex items-center gap-1 hover:scale-105 bg-emerald-500/10">
+                                    🗺️ تحديد يدوي
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold mb-2">تفاصيل إضافية أو أقرب معلم</label>
+                            <textarea id="issue-desc" rows="3" placeholder="اكتب تفاصيل إضافية عن المشكلة..." class="w-full dynamic-input border rounded-xl p-3 text-xs focus:outline-none focus:border-emerald-500 transition-all"></textarea>
+                        </div>
+
+                        <button type="submit" class="w-full py-4 rounded-2xl emerald-btn shadow-lg text-sm">
+                            تحليل وإرسال البلاغ إلى غرفة العمليات 🚀
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- ==================== TAB 2: MY REPORTS (With Community Upvoting) ==================== -->
+            <section id="tab-my-reports" class="hidden space-y-6 animate-fade-in">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold">سجل بلاغاتي والتصويت المجتمعي</h2>
+                        <p class="text-xs opacity-75">تابع حالة إنجاز بلاغتك أو ادعم البلاغات القريبة عبر زر "عندي نفس المشكلة (+1)"</p>
+                    </div>
+                    <div id="reports-count-badge" class="px-4 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 font-semibold text-xs">
+                        0 بلاغات نشطة
+                    </div>
+                </div>
+
+                <div id="reports-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="col-span-full text-center py-16 glass-card rounded-3xl">
+                        <p class="opacity-70 text-sm">جاري جلب البلاغات والتصويتات من السيرفر...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== TAB 3: STATS (Updated with Heatmap & Dynamic Metrics) ==================== -->
+            <section id="tab-stats" class="hidden space-y-8 animate-fade-in">
+                <div class="text-center max-w-xl mx-auto space-y-2">
+                    <h2 class="text-3xl font-black">إحصائيات وحالة المدينة والخرائط الحرارية</h2>
+                    <p class="text-xs opacity-75">مؤشرات الأداء الحي وكثافة البلاغات الميدانية موزعة جغرافياً في أحياء كركوك</p>
+                </div>
+
+                <!-- إحصائيات سريعة متصلة بالسيرفر -->
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                    <div class="glass-card p-6 rounded-3xl text-center space-y-2 border-l-4 border-emerald-500">
+                        <p class="text-3xl font-black text-emerald-600" id="stats-total-reports">0</p>
+                        <p class="text-xs opacity-80">إجمالي البلاغات المسجلة</p>
+                    </div>
+                    <div class="glass-card p-6 rounded-3xl text-center space-y-2 border-l-4 border-amber-500">
+                        <p class="text-3xl font-black text-amber-500" id="stats-pending-reports">0</p>
+                        <p class="text-xs opacity-80">قيد المعالجة الميدانية</p>
+                    </div>
+                    <div class="glass-card p-6 rounded-3xl text-center space-y-2 border-l-4 border-sky-500">
+                        <p class="text-3xl font-black text-sky-600" id="stats-resolved-reports">0</p>
+                        <p class="text-xs opacity-80">البلاغات المنجزة والمقبولة</p>
+                    </div>
+                    <div class="glass-card p-6 rounded-3xl text-center space-y-2 border-l-4 border-teal-500">
+                        <p class="text-3xl font-black text-teal-600">94.8%</p>
+                        <p class="text-xs opacity-80">مؤشر كفاءة الاستجابة</p>
+                    </div>
+                </div>
+
+                <!-- الخريطة الحرارية التفاعلية للبلاغات -->
+                <div class="glass-card p-6 rounded-3xl space-y-4 border border-emerald-500/30 shadow-2xl">
+                    <div class="flex items-center justify-between border-b border-emerald-500/20 pb-3">
+                        <div>
+                            <h3 class="text-base font-black flex items-center gap-2">
+                                <span>🔥</span> الخريطة الحرارية لكثافة الأعطال والبلاغات (Heatmap)
+                            </h3>
+                            <p class="text-[11px] opacity-75">توضيح بؤر الكثافة والضغط الخدمي في مناطق المدينة استناداً إلى إحداثيات البلاغات الفعلية</p>
+                        </div>
+                        <span class="px-3 py-1 rounded-full bg-rose-500/10 text-rose-600 text-xs font-bold border border-rose-500/30 animate-pulse">تحديث حي 🟢</span>
+                    </div>
+
+                    <div class="relative w-full h-[450px] rounded-2xl overflow-hidden border border-emerald-500/30 shadow-inner">
+                        <div id="stats-mapbox-container" class="w-full h-full"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== TAB 4: EMERGENCY ==================== -->
+            <section id="tab-emergency" class="hidden space-y-6 animate-fade-in">
+                <div class="text-center max-w-xl mx-auto space-y-2">
+                    <h2 class="text-2xl font-bold">دليل الطوارئ والأرقام الخدمية</h2>
+                    <p class="text-xs opacity-75">اتصال سريع بالدوائر الخدمية والقطاعات الحيوية في المدينة</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="glass-card p-5 rounded-2xl space-y-2 border-l-4 border-emerald-500">
+                        <p class="text-sm font-bold">غرفة عمليات البلدية</p>
+                        <p class="text-xs text-emerald-600 font-mono font-bold">123 أو 0770XXXXXXX</p>
+                    </div>
+                    <div class="glass-card p-5 rounded-2xl space-y-2 border-l-4 border-sky-500">
+                        <p class="text-sm font-bold">طوارئ شبكات الماء</p>
+                        <p class="text-xs text-sky-600 font-mono font-bold">155 أو 0771XXXXXXX</p>
+                    </div>
+                    <div class="glass-card p-5 rounded-2xl space-y-2 border-l-4 border-amber-500">
+                        <p class="text-sm font-bold">صيانة طوارئ الكهرباء</p>
+                        <p class="text-xs text-amber-600 font-mono font-bold">166 أو 0772XXXXXXX</p>
+                    </div>
+                    <div class="glass-card p-5 rounded-2xl space-y-2 border-l-4 border-rose-500">
+                        <p class="text-sm font-bold text-rose-600">الإسعاف الفوري</p>
+                        <p class="text-xs text-rose-600 font-mono font-bold">122</p>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ==================== MAP MODAL ==================== -->
+    <div id="map-modal" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+        <div class="glass-card max-w-2xl w-full rounded-3xl p-6 shadow-2xl space-y-4 border border-emerald-500/35 relative">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h3 class="text-base font-black">تحديد موقع العطل الجغرافي 📍</h3>
+                    <p class="text-[11px] opacity-75">حرك الخريطة بحيث يكون الدبوس في منتصف مكان المشكلة تماماً:</p>
+                </div>
+                <button type="button" onclick="closeMapModal()" class="text-rose-600 font-bold text-xs px-3 py-1.5 bg-rose-500/10 rounded-xl hover:bg-rose-500/25 transition-all">إغلاق ✕</button>
+            </div>
+            
+            <div class="relative w-full h-80 rounded-2xl border border-emerald-500/30 shadow-inner overflow-hidden z-10">
+                <div id="mapbox-container" class="w-full h-full"></div>
+                
+                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[1000] pointer-events-none flex flex-col items-center">
+                    <div class="bg-emerald-600 text-white font-bold text-[10px] px-2.5 py-1 rounded-full shadow-lg border border-white animate-bounce">
+                        📍 موقع المشكلة هنا
+                    </div>
+                    <div class="w-4 h-4 bg-emerald-600 rounded-full border-2 border-white shadow-md"></div>
+                </div>
+
+                <button type="button" onclick="goToUserLocation()" class="absolute bottom-4 right-4 z-[1001] bg-white hover:bg-slate-100 text-sky-600 p-3 rounded-2xl shadow-xl border border-sky-300 font-bold text-xs flex items-center gap-1.5 transition-all hover:scale-105">
+                    📍 موقعي الحالي
+                </button>
+            </div>
+            
+            <button type="button" onclick="confirmManualLocation()" class="w-full py-3 rounded-xl emerald-btn text-xs font-bold shadow-md">
+                تأكيد واعتماد هذا الموقع للبلاغ ✓
+            </button>
+        </div>
+    </div>
+
+    <!-- ==================== JAVASCRIPT ==================== -->
+    <script>
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        const iraqGovernorates = [
+            { name: "دهوك", rx: -0.15, ry: -0.72, color: "#8b5cf6" },
+            { name: "أربيل", rx: 0.12, ry: -0.58, color: "#0ea5e9" },
+            { name: "نينوى (الموصل)", rx: -0.32, ry: -0.55, color: "#f59e0b" },
+            { name: "السليمانية", rx: 0.35, ry: -0.48, color: "#3b82f6" },
+            { name: "كركوك", rx: 0.15, ry: -0.38, color: "#10b981" },
+            { name: "صلاح الدين", rx: -0.05, ry: -0.20, color: "#14b8a6" },
+            { name: "ديالى", rx: 0.28, ry: -0.05, color: "#6366f1" },
+            { name: "الأنبار", rx: -0.45, ry: -0.02, color: "#f97316" },
+            { name: "بغداد", rx: 0.05, ry: 0.05, color: "#059669" },
+            { name: "كربلاء", rx: -0.15, ry: 0.18, color: "#ec4899" },
+            { name: "بابل", rx: 0.02, ry: 0.22, color: "#8b5cf6" },
+            { name: "واسط", rx: 0.38, ry: 0.20, color: "#06b6d4" },
+            { name: "النجف", rx: -0.22, ry: 0.35, color: "#10b981" },
+            { name: "الديوانية", rx: -0.05, ry: 0.42, color: "#f43f5e" },
+            { name: "ميسان", rx: 0.48, ry: 0.45, color: "#eab308" },
+            { name: "المثنى", rx: -0.18, ry: 0.60, color: "#64748b" },
+            { name: "ذي قار", rx: 0.18, ry: 0.54, color: "#3b82f6" },
+            { name: "البصرة", rx: 0.55, ry: 0.72, color: "#ef4444" }
+        ];
+
+        let mouseX = width / 2;
+        let mouseY = height / 2;
+        window.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        let ekgOffset = 0;
+
+        function animateBg() {
+            ctx.clearRect(0, 0, width, height);
+            ctx.save();
+            ctx.strokeStyle = document.body.classList.contains('dark-mode') ? 'rgba(16, 185, 129, 0.18)' : 'rgba(16, 185, 129, 0.25)';
+            ctx.lineWidth = 2.5;
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = '#10b981';
+
+            ekgOffset += 2;
+            if (ekgOffset > width) ekgOffset = 0;
+
+            [height * 0.25, height * 0.75].forEach((baseY, waveIdx) => {
+                ctx.beginPath();
+                for (let x = 0; x < width; x += 3) {
+                    let freq = 0.015;
+                    let p = (x + ekgOffset * (waveIdx === 0 ? 1 : -1)) * freq;
+                    let mathVal = Math.sin(p);
+                    let spike = Math.exp(-Math.pow((Math.sin(p) * 4) % 3, 2)) * 35 * (Math.sin(p * 0.5) > 0 ? 1 : -0.3);
+                    let y = baseY + mathVal * 15 + spike;
+                    if (x === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            });
+            ctx.restore();
+
+            const cx = width * 0.5 + (mouseX - width/2) * 0.03;
+            const cy = height * 0.5 + (mouseY - height/2) * 0.03;
+            const scale = Math.min(width, height) * 0.55;
+
+            const govNodes = iraqGovernorates.map(g => ({
+                name: g.name,
+                x: cx + g.rx * scale,
+                y: cy + g.ry * scale,
+                color: g.color
+            }));
+
+            govNodes.forEach((gov, index) => {
+                let pulse = Math.sin(Date.now() * 0.004 + index) * 6;
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(gov.x, gov.y, 11 + pulse, 0, Math.PI * 2);
+                ctx.strokeStyle = gov.color;
+                ctx.lineWidth = 2;
+                ctx.shadowBlur = 16;
+                ctx.shadowColor = gov.color;
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(gov.x, gov.y, 5, 0, Math.PI * 2);
+                ctx.fillStyle = gov.color;
+                ctx.fill();
+                ctx.fillStyle = document.body.classList.contains('dark-mode') ? '#f8fafc' : '#1e293b';
+                ctx.font = 'bold 12px Cairo';
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = document.body.classList.contains('dark-mode') ? '#000000' : '#ffffff';
+                ctx.fillText(gov.name, gov.x + 15, gov.y + 4);
+                ctx.restore();
+            });
+
+            requestAnimationFrame(animateBg);
+        }
+        animateBg();
+
+        const cursor = document.getElementById('cursor');
+        const cursorDot = document.getElementById('cursor-dot');
+        window.addEventListener('mousemove', (e) => {
+            cursor.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
+            cursorDot.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
+        });
+
+        function toggleThemeMode() {
+            const body = document.body;
+            body.classList.toggle('dark-mode');
+            const isDark = body.classList.contains('dark-mode');
+            localStorage.setItem('civic_theme_dark', isDark);
+
+            updateThemeButtonUI(isDark);
+            if (mapboxMap) {
+                mapboxMap.setStyle(isDark ? 'mapbox://styles/mapbox/navigation-night-v1' : 'mapbox://styles/mapbox/streets-v12');
+            }
+            if (statsMap) {
+                statsMap.setStyle(isDark ? 'mapbox://styles/mapbox/navigation-night-v1' : 'mapbox://styles/mapbox/streets-v12');
+            }
+        }
+
+        function updateThemeButtonUI(isDark) {
+            const icon = document.getElementById('theme-icon');
+            const text = document.getElementById('theme-text');
+            if (isDark) {
+                icon.innerText = '☀️';
+                text.innerText = 'وضع ليلي: تفعيل';
+            } else {
+                icon.innerText = '🌙';
+                text.innerText = 'وضع ليلي: إطفاء';
+            }
+        }
+
+        window.onload = function() {
+            const savedTheme = localStorage.getItem('civic_theme_dark');
+            if (savedTheme === 'true') {
+                document.body.classList.add('dark-mode');
+                updateThemeButtonUI(true);
+            } else {
+                updateThemeButtonUI(false);
+            }
+
+            const savedName = localStorage.getItem('civic_user_name');
+            if (savedName) {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('main-app').classList.remove('hidden');
+                document.getElementById('display-user-name').innerText = `مرحباً، ${savedName}`;
+            }
+        };
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const name = document.getElementById('user-name-input').value;
+            const phone = document.getElementById('user-phone-input').value;
+            
+            localStorage.setItem('civic_user_name', name);
+            localStorage.setItem('civic_user_phone', phone);
+
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            document.getElementById('display-user-name').innerText = `مرحباً، ${name}`;
+
+            confetti({
+                particleCount: 150,
+                spread: 110,
+                origin: { y: 0.6 },
+                colors: ['#059669', '#10b981', '#0ea5e9', '#ffffff']
+            });
+
+            const banner = document.getElementById('welcome-banner');
+            document.getElementById('welcome-msg-title').innerText = `أهلاً بك يا ${name}!`;
+            banner.classList.remove('hidden');
+
+            setTimeout(() => { banner.classList.add('hidden'); }, 4000);
+        }
+
+        function logout() {
+            localStorage.removeItem('civic_user_name');
+            localStorage.removeItem('civic_user_phone');
+            location.reload();
+        }
+
+        function switchTab(tabName) {
+            ['home', 'report', 'my-reports', 'stats', 'emergency'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                const btn = document.getElementById(`nav-${t}`);
+                if(btn) btn.className = "px-4 py-2 rounded-xl text-xs font-semibold transition-all hover:text-emerald-600";
+            });
+
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`nav-${tabName}`);
+            if(activeBtn) activeBtn.className = "px-4 py-2 rounded-xl text-xs font-semibold transition-all bg-emerald-600 text-white shadow-md";
+
+            if(tabName === 'my-reports') renderReports();
+            if(tabName === 'stats') loadStatsAndHeatmap();
+        }
+
+        let selectedCategoryVal = 'potholes';
+
+        function selectCategory(category, btn) {
+            selectedCategoryVal = category;
+            document.querySelectorAll('.category-btn').forEach(b => {
+                b.className = "category-btn p-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500 text-center transition-all flex flex-col items-center gap-1 text-xs";
+            });
+            if(btn) {
+                btn.className = "category-btn p-3 rounded-xl border border-emerald-500 bg-emerald-500/20 text-center transition-all flex flex-col items-center gap-1 text-xs font-bold";
+            }
+
+            const otherContainer = document.getElementById('other-desc-container');
+            if (category === 'other') {
+                otherContainer.classList.remove('hidden');
+            } else {
+                otherContainer.classList.add('hidden');
+            }
+        }
+
+        let currentLat = 35.4681;
+        let currentLng = 44.3922;
+
+        function detectLocation() {
+            const locInput = document.getElementById('location-input');
+            locInput.value = "📍 جاري تحديد الإحداثيات...";
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    currentLat = position.coords.latitude;
+                    currentLng = position.coords.longitude;
+                    locInput.value = `كركوك - الموقع الحالي (GPS: ${currentLat.toFixed(4)}, ${currentLng.toFixed(4)})`;
+                }, function(error) {
+                    currentLat = 35.4681;
+                    currentLng = 44.3922;
+                    locInput.value = `كركوك، العراق - مركز المدينة (موقع افتراضي معتمد)`;
+                }, { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 });
+            } else {
+                currentLat = 35.4681;
+                currentLng = 44.3922;
+                locInput.value = `كركوك، العراق - مركز المدينة`;
+            }
+        }
+
+        mapboxgl.setRTLTextPlugin(
+            'https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-rtl-text/v0.2.3/mapbox-gl-rtl-text.js',
+            null,
+            true
+        );
+
+        let mapboxMap = null;
+        let selectedAddressText = "كركوك، العراق";
+        let userMarker = null;
+        let lastUserCoords = [44.3922, 35.4681];
+
+        function openMapModal() {
+            document.getElementById('map-modal').classList.remove('hidden');
+            setTimeout(() => {
+                if (!mapboxMap) {
+                    mapboxgl.accessToken = 'pk.eyJ1IjoibWF6aW5tYXppbjM0MiIsImEiOiJjbXc0b3E1c2YwOGQyMnpzaTdiZ24zOHM2In0.DAfH3kMEpvIqmqLRwgcrwg';
+                    
+                    const isDark = document.body.classList.contains('dark-mode');
+                    mapboxMap = new mapboxgl.Map({
+                        container: 'mapbox-container',
+                        style: isDark ? 'mapbox://styles/mapbox/navigation-night-v1' : 'mapbox://styles/mapbox/streets-v12',
+                        center: lastUserCoords,
+                        zoom: 15
+                    });
+
+                    mapboxMap.on('move', function() {
+                        const center = mapboxMap.getCenter();
+                        currentLat = center.lat;
+                        currentLng = center.lng;
+                        selectedAddressText = `موقع دقيق (إحداثيات: ${currentLat.toFixed(4)}, ${currentLng.toFixed(4)})`;
+                    });
+
+                    fetchUserGPSLocation(true);
+                } else {
+                    mapboxMap.resize();
+                }
+            }, 200);
+        }
+
+        function fetchUserGPSLocation(flyToLoc = false) {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const userLng = position.coords.longitude;
+                    const userLat = position.coords.latitude;
+                    lastUserCoords = [userLng, userLat];
+                    currentLat = userLat;
+                    currentLng = userLng;
+
+                    if (flyToLoc && mapboxMap) {
+                        mapboxMap.flyTo({ center: lastUserCoords, zoom: 16 });
+                    }
+
+                    if (userMarker) userMarker.remove();
+
+                    const el = document.createElement('div');
+                    el.className = 'w-6 h-6 rounded-full bg-emerald-500 border-3 border-white shadow-xl flex items-center justify-center animate-pulse';
+                    el.innerHTML = '<div class="w-2.5 h-2.5 bg-white rounded-full"></div>';
+
+                    userMarker = new mapboxgl.Marker(el)
+                        .setLngLat(lastUserCoords)
+                        .addTo(mapboxMap);
+
+                }, function(error) {
+                    console.log("استخدام الموقع الافتراضي لكركوك");
+                }, { enableHighAccuracy: true, timeout: 5000 });
+            }
+        }
+
+        function goToUserLocation() {
+            if (mapboxMap) {
+                mapboxMap.flyTo({ center: lastUserCoords, zoom: 16 });
+            }
+        }
+
+        function closeMapModal() {
+            document.getElementById('map-modal').classList.add('hidden');
+        }
+
+        function confirmManualLocation() {
+            const locInput = document.getElementById('location-input');
+            locInput.value = selectedAddressText;
+            closeMapModal();
+        }
+
+        // ⚡ ميزة المعاينة الذكية الفورية قبل الإرسال (Instant AI Preview)
+        async function previewImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('image-preview');
+                if (preview) preview.src = e.target.result;
+                const container = document.getElementById('image-preview-container');
+                if (container) container.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+
+            const aiPreviewBox = document.getElementById('ai-preview-box');
+            const aiPreviewContent = document.getElementById('ai-preview-content');
+            aiPreviewBox.classList.remove('hidden');
+            aiPreviewContent.innerHTML = `<span class="text-emerald-600 dark:text-emerald-400 animate-pulse">🔄 جاري تحليل الصورة بالذكاء الاصطناعي (YOLO)...</span>`;
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                const response = await fetch("http://127.0.0.1:8000/api/preview", { method: "POST", body: formData });
+                const data = await response.json();
+                if (data.success) {
+                    aiPreviewContent.innerHTML = `
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div><span>التصنيف المرصود:</span> <strong class="text-emerald-600 dark:text-emerald-400">${data.category_ar}</strong></div>
+                            <div><span>مستوى الخطورة:</span> <strong class="text-amber-600">${data.ai_priority}</strong></div>
+                        </div>
+                        <p class="text-[10px] opacity-70 mt-1">✨ تم التحليل المسبق بنجاح وجاهز للإرسال النهائي.</p>
+                    `;
+                } else {
+                    aiPreviewContent.innerHTML = `<span class="text-rose-500">تعذر تحليل الصورة آلياً.</span>`;
+                }
+            } catch (err) {
+                aiPreviewContent.innerHTML = `<span class="text-rose-500">تأكد من تشغيل السيرفر لتحليل المعاينة الفورية.</span>`;
+            }
+        }
+
+        let reportTimer = null;
+
+        function showFormError(message) {
+            const alertBanner = document.getElementById('error-alert-banner');
+            const alertMsg = document.getElementById('error-alert-msg');
+            alertMsg.innerText = message;
+            alertBanner.classList.remove('hidden');
+            alertBanner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+            setTimeout(() => {
+                alertBanner.classList.add('hidden');
+            }, 4000);
+        }
+
+        async function submitReport(event) {
+            event.preventDefault();
+            
+            if (reportTimer) clearTimeout(reportTimer);
+
+            const imageInput = document.getElementById('issue-image');
+            const locationInput = document.getElementById('location-input');
+            
+            const locationText = (locationInput ? locationInput.value : "") || "كركوك، العراق";
+
+            if (imageInput.files.length === 0) {
+                showFormError("يرجى إرفاق صورة للمشكلة الميدانية أولاً قبل إرسال البلاغ!");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", imageInput.files[0]);
+            formData.append("lat", currentLat);
+            formData.append("lng", currentLng);
+            formData.append("location", locationText);
+            formData.append("category", selectedCategoryVal);
+
+            if (selectedCategoryVal === 'other') {
+                const otherDesc = document.getElementById('other-issue-input').value.trim();
+                formData.append("other_description", otherDesc);
+            }
+
+            const successBanner = document.getElementById('inpage-success-banner');
+            successBanner.classList.remove('hidden');
+            successBanner.innerHTML = `<span class="text-2xl">🤖</span><div><p class="font-black">الذكاء الاصطناعي يحلل الصورة ويحدد التصنيف تلقائياً...</p></div>`;
+
+            try {
+                const response = await fetch("http://127.0.0.1:8000/api/predict", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error("فشل التحليل في السيرفر");
+                }
+                
+                confetti({ particleCount: 110, spread: 90, origin: { y: 0.7 }, colors: ['#059669', '#10b981', '#0ea5e9'] });
+
+                successBanner.innerHTML = `<span class="text-2xl">🎉</span><div><p class="font-black">تم إرسال البلاغ ورصد المشكلة آلياً بنجاح وحفظه في النظام!</p></div>`;
+
+                document.getElementById('report-form').reset();
+                document.getElementById('image-preview-container').classList.add('hidden');
+                document.getElementById('other-desc-container').classList.add('hidden');
+                document.getElementById('ai-preview-box').classList.add('hidden');
+
+                reportTimer = setTimeout(() => {
+                    successBanner.classList.add('hidden');
+                    switchTab('my-reports');
+                }, 1800);
+
+            } catch (error) {
+                console.error("خطأ في الاتصال بالسيرفر:", error);
+                showFormError("تأكد من تشغيل سيرفر البايثون (python server.py) أولاً!");
+                successBanner.classList.add('hidden');
+            }
+        }
+
+        // 🗳️ نظام التصويت المجتمعي (Community Upvoting)
+        async function upvoteReport(reportId) {
+            try {
+                const response = await fetch(`http://127.0.0.1:8000/api/reports/${reportId}/upvote`, { method: 'POST' });
+                const data = await response.json();
+                if (data.success) {
+                    const badge = document.getElementById(`votes-count-${reportId}`);
+                    if (badge) badge.innerText = data.upvotes;
+                    confetti({ particleCount: 40, spread: 50, origin: { y: 0.8 } });
+                }
+            } catch (error) {
+                console.error("فشل التصويت المجتمعي:", error);
+            }
+        }
+
+        async function renderReports() {
+            const listContainer = document.getElementById('reports-list');
+            listContainer.innerHTML = `<div class="col-span-full text-center py-16 glass-card rounded-3xl"><p class="opacity-70 text-sm">جاري مزامنة البلاغات مع غرفة العمليات...</p></div>`;
+
+            try {
+                const response = await fetch("http://127.0.0.1:8000/api/reports");
+                const data = await response.json();
+                
+                if (data.success && data.reports) {
+                    const reports = data.reports;
+                    document.getElementById('reports-count-badge').innerText = `${reports.length} بلاغات نشطة`;
+
+                    if (reports.length === 0) {
+                        listContainer.innerHTML = `<div class="col-span-full text-center py-16 glass-card rounded-3xl"><p class="opacity-70 text-sm">لا توجد بلاغات مرسلة حتى الآن. ابدأ بإرسال بلاغك الأول!</p></div>`;
+                        return;
+                    }
+
+                    let html = '';
+                    reports.forEach(rep => {
+                        let statusColor = "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30";
+                        if (rep.status.includes('قبول') || rep.status.includes('منجز') || rep.status.includes('🟢') || rep.status.includes('✅')) {
+                            statusColor = "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30";
+                        } else if (rep.status.includes('رفض') || rep.status.includes('🔴') || rep.status.includes('✕')) {
+                            statusColor = "bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/30";
+                        }
+
+                        let afterImageHtml = '';
+                        if (rep.after_image_path) {
+                            afterImageHtml = `
+                                <div class="mt-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 space-y-2">
+                                    <p class="text-xs font-bold text-emerald-600 dark:text-emerald-400">🎉 معرض قبل وبعد الصيانة والتعمير:</p>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <p class="text-[10px] opacity-75 mb-1">قبل الصيانة:</p>
+                                            <img src="http://127.0.0.1:8000${rep.image_path}" class="w-full h-24 rounded-lg object-cover border border-emerald-500/30">
+                                        </div>
+                                        <div>
+                                            <p class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold mb-1">بعد الإصلاح:</p>
+                                            <img src="http://127.0.0.1:8000${rep.after_image_path}" class="w-full h-24 rounded-lg object-cover border border-emerald-500/50 shadow">
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }
+
+                        html += `
+                            <div class="glass-card rounded-2xl p-5 space-y-3 shadow-xl animate-fade-in border border-emerald-500/20">
+                                <div class="flex justify-between items-center">
+                                    <span class="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-500/30">رقم البلاغ: ${rep.report_no}</span>
+                                    <span class="px-3 py-1 rounded-xl text-xs font-bold border ${statusColor}">${rep.status}</span>
+                                </div>
+                                <div class="flex gap-4 items-start">
+                                    <img src="http://127.0.0.1:8000${rep.image_path}" class="w-24 h-24 rounded-xl object-cover border border-emerald-500/30" onerror="this.src='https://via.placeholder.com/100?text=Report'">
+                                    <div class="flex-1 space-y-1">
+                                        <div class="inline-block px-3 py-0.5 rounded-lg bg-sky-500/10 text-sky-700 dark:text-sky-300 text-xs font-black border border-sky-500/30">${rep.category_ar}</div>
+                                        <h4 class="text-xs font-bold">${rep.location || 'كركوك، العراق'}</h4>
+                                        <p class="text-xs opacity-80 leading-relaxed bg-emerald-500/5 p-2 rounded-xl border border-emerald-500/10">تم رصد المشكلة ميدانياً وتوثيقها في النظام الذكي.</p>
+                                        <div class="text-[10px] opacity-65">📅 تاريخ الإرسال: ${rep.date_time}</div>
+                                    </div>
+                                </div>
+                                ${afterImageHtml}
+                                
+                                <!-- زر التصويت المجتمعي (Community Upvoting) -->
+                                <div class="flex items-center justify-between mt-3 pt-3 border-t border-emerald-500/20">
+                                    <span class="text-[11px] opacity-75">دعم المجتمع للبلاغ:</span>
+                                    <button onclick="upvoteReport(${rep.id})" class="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 rounded-xl text-xs font-bold transition">
+                                        <span>⚠️ عندي نفس المشكلة</span>
+                                        <span id="votes-count-${rep.id}" class="bg-amber-500 text-white px-2 py-0.5 rounded-full">${rep.upvotes || 1}</span>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    listContainer.innerHTML = html;
+                }
+            } catch (error) {
+                console.error("خطأ في جلب البلاغات:", error);
+            }
+        }
+
+        // ==================== STATS & HEATMAP LOGIC ====================
+        let statsMap = null;
+
+        async function loadStatsAndHeatmap() {
+            try {
+                const response = await fetch("http://127.0.0.1:8000/api/reports");
+                const data = await response.json();
+                
+                if (data.success && data.reports) {
+                    const reports = data.reports;
+                    
+                    const total = reports.length;
+                    const pending = reports.filter(r => r.status.includes('قيد')).length;
+                    const resolved = reports.filter(r => r.status.includes('قبول') || r.status.includes('منجز') || r.status.includes('🟢') || r.status.includes('✅')).length;
+
+                    document.getElementById('stats-total-reports').innerText = total;
+                    document.getElementById('stats-pending-reports').innerText = pending;
+                    document.getElementById('stats-resolved-reports').innerText = resolved;
+
+                    initStatsHeatmap(reports);
+                }
+            } catch (e) {
+                console.error("تعذر تحميل بيانات الإحصائيات:", e);
+            }
+        }
+
+        function initStatsHeatmap(reports) {
+            setTimeout(() => {
+                const container = document.getElementById('stats-mapbox-container');
+                if (!container) return;
+                const isDark = document.body.classList.contains('dark-mode');
+                
+                if (!statsMap) {
+                    mapboxgl.accessToken = 'pk.eyJ1IjoibWF6aW5tYXppbjM0MiIsImEiOiJjbXc0b3E1c2YwOGQyMnpzaTdiZ24zOHM2In0.DAfH3kMEpvIqmqLRwgcrwg';
+                    statsMap = new mapboxgl.Map({
+                        container: 'stats-mapbox-container',
+                        style: isDark ? 'mapbox://styles/mapbox/navigation-night-v1' : 'mapbox://styles/mapbox/streets-v12',
+                        center: [44.3922, 35.4681],
+                        zoom: 13
+                    });
+
+                    statsMap.on('load', () => {
+                        updateHeatmapSource(reports);
+                    });
+                } else {
+                    statsMap.resize();
+                    updateHeatmapSource(reports);
+                }
+            }, 250);
+        }
+
+        function updateHeatmapSource(reports) {
+            if (!statsMap) return;
+
+            const features = reports.map(r => ({
+                type: 'Feature',
+                geometry: {
+                    type: 'Point',
+                    coordinates: [parseFloat(r.lng) || 44.3922, parseFloat(r.lat) || 35.4681]
+                },
+                properties: {
+                    category: r.category_ar,
+                    report_no: r.report_no
+                }
+            }));
+
+            const geojson = {
+                type: 'FeatureCollection',
+                features: features
+            };
+
+            if (statsMap.getSource('reports-heat')) {
+                statsMap.getSource('reports-heat').setData(geojson);
+            } else {
+                statsMap.addSource('reports-heat', {
+                    type: 'geojson',
+                    data: geojson
+                });
+
+                statsMap.addLayer({
+                    id: 'reports-heat-layer',
+                    type: 'heatmap',
+                    source: 'reports-heat',
+                    maxzoom: 18,
+                    paint: {
+                        'heatmap-weight': 1,
+                        'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 0, 1, 15, 3],
+                        'heatmap-color': [
+                            'interpolate',
+                            ['linear'],
+                            ['heatmap-density'],
+                            0, 'rgba(33,102,172,0)',
+                            0.2, 'rgb(103,169,207)',
+                            0.4, 'rgb(209,229,240)',
+                            0.6, 'rgb(253,219,199)',
+                            0.8, 'rgb(239,138,98)',
+                            1, 'rgb(178,24,43)'
+                        ],
+                        'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 0, 2, 15, 25],
+                        'heatmap-opacity': 0.8
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>
