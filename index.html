@@ -19,6 +19,7 @@
             --bg-main: linear-gradient(to bottom right, #f8fafc, #f0fdf4, #e6fffa);
             --text-main: #1e293b;
             --card-bg: rgba(255, 255, 255, 0.92);
+            --logo-box-bg: rgba(255, 255, 255, 0.85);
             --card-border: rgba(16, 185, 129, 0.25);
             --card-shadow: 0 20px 40px rgba(16, 185, 129, 0.1);
             --header-bg: rgba(255, 255, 255, 0.88);
@@ -36,6 +37,7 @@
             --bg-main: radial-gradient(circle at center, #0f172a 0%, #060913 100%);
             --text-main: #f8fafc;
             --card-bg: rgba(15, 23, 42, 0.90);
+            --logo-box-bg: transparent;
             --card-border: rgba(16, 185, 129, 0.35);
             --card-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
             --header-bg: rgba(15, 23, 42, 0.88);
@@ -48,14 +50,28 @@
             --logout-hover: rgba(225, 29, 72, 0.2);
         }
 
+        html, body {
+            width: 100%;
+            max-width: 100vw;
+            overflow-x: hidden;
+        }
+
         body {
             font-family: 'Cairo', 'Inter', sans-serif;
             background: var(--bg-main);
             color: var(--text-main);
-            overflow-x: hidden;
             cursor: default;
             min-height: 100vh;
             transition: background 0.4s ease, color 0.4s ease;
+        }
+
+        .logo-frame {
+            background: var(--logo-box-bg);
+            transition: background 0.35s ease;
+        }
+
+        .logo-img {
+            opacity: 1;
         }
 
         #bg-canvas {
@@ -144,9 +160,9 @@
         .bg-glow-emerald {
             position: absolute;
             top: 10%;
-            left: 15%;
-            width: 450px;
-            height: 450px;
+            left: 10%;
+            width: 540px;
+            height: 540px;
             background: rgba(16, 185, 129, 0.15);
             filter: blur(120px);
             border-radius: 50%;
@@ -156,9 +172,9 @@
         .bg-glow-sky {
             position: absolute;
             bottom: 10%;
-            right: 15%;
-            width: 500px;
-            height: 500px;
+            right: 10%;
+            width: 580px;
+            height: 580px;
             background: rgba(14, 165, 233, 0.15);
             filter: blur(140px);
             border-radius: 50%;
@@ -203,7 +219,7 @@
         }
     </style>
 </head>
-<body class="min-h-screen relative">
+<body class="min-h-screen w-full relative">
 
     <canvas id="bg-canvas"></canvas>
 
@@ -214,29 +230,29 @@
     <div class="bg-glow-sky"></div>
 
     <!-- ==================== LOGIN SCREEN ==================== -->
-    <div id="login-screen" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-2xl flex items-center justify-center p-4">
-        <div class="glass-card max-w-md w-full rounded-3xl p-8 shadow-2xl space-y-6 border border-emerald-500/30 animate-fade-in relative overflow-hidden">
+    <div id="login-screen" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-2xl flex items-center justify-center p-4 sm:p-8">
+        <div class="glass-card w-full max-w-xl rounded-3xl p-8 sm:p-10 shadow-2xl space-y-6 border border-emerald-500/30 animate-fade-in relative overflow-hidden">
             <div class="text-center space-y-4 relative z-10">
-                <div class="w-full h-32 mx-auto flex items-center justify-center p-2 rounded-2xl border border-emerald-500/30 shadow-xl relative overflow-hidden" style="background: var(--card-bg);">
-                    <img src="logo.png" alt="نبض مدينتي" class="absolute inset-0 w-full h-full object-contain p-2 z-10" onerror="this.src='https://via.placeholder.com/300x100?text=Logo.png+Missing'">
-                    <img src="logo-ekg.png" alt="نبض مدينتي مع التخطيط" class="absolute inset-0 w-full h-full object-contain p-2 z-20 ekg-image-overlay" onerror="this.src='https://via.placeholder.com/300x100?text=Logo-EKG.png+Missing'">
+                <div class="logo-frame w-full h-36 mx-auto flex items-center justify-center p-2 rounded-2xl border border-emerald-500/30 shadow-xl relative overflow-hidden">
+                    <img src="logo.png" alt="نبض مدينتي" class="logo-img absolute inset-0 w-full h-full object-contain p-2 z-10" onerror="this.src='https://via.placeholder.com/300x100?text=Logo.png+Missing'">
+                    <img src="logo-ekg.png" alt="نبض مدينتي مع التخطيط" class="logo-img absolute inset-0 w-full h-full object-contain p-2 z-20 ekg-image-overlay" onerror="this.src='https://via.placeholder.com/300x100?text=Logo-EKG.png+Missing'">
                 </div>
                 <div>
-                    <h1 class="text-2xl font-black emerald-gradient-text tracking-wide">نبض مدينتي</h1>
-                    <p class="text-xs opacity-75 mt-1">منصة بلاغات المدن الذكية - سجل دخولك للمتابعة</p>
+                    <h1 class="text-3xl sm:text-4xl font-black emerald-gradient-text tracking-wide">نبض مدينتي</h1>
+                    <p class="text-sm sm:text-base opacity-75 mt-1">منصة بلاغات المدن الذكية - سجل دخولك للمتابعة</p>
                 </div>
             </div>
 
             <form onsubmit="handleLogin(event)" class="space-y-4 relative z-10">
                 <div>
-                    <label class="block text-xs font-semibold mb-1">الاسم الكامل</label>
-                    <input type="text" id="user-name-input" required placeholder="مثال: مازن هجران" class="w-full dynamic-input border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500 transition-all">
+                    <label class="block text-sm font-semibold mb-1.5">الاسم الكامل</label>
+                    <input type="text" id="user-name-input" required placeholder="مثال: مازن هجران" class="w-full dynamic-input border rounded-xl px-4 py-3 text-sm sm:text-base focus:outline-none focus:border-emerald-500 transition-all">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold mb-1">رقم الهاتف النقال</label>
-                    <input type="tel" id="user-phone-input" required placeholder="0770xxxxxxx" class="w-full dynamic-input border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500 transition-all">
+                    <label class="block text-sm font-semibold mb-1.5">رقم الهاتف النقال</label>
+                    <input type="tel" id="user-phone-input" required placeholder="0770xxxxxxx" class="w-full dynamic-input border rounded-xl px-4 py-3 text-sm sm:text-base focus:outline-none focus:border-emerald-500 transition-all">
                 </div>
-                <button type="submit" class="w-full py-3.5 rounded-xl emerald-btn shadow-lg text-sm">
+                <button type="submit" class="w-full py-4 rounded-xl emerald-btn shadow-lg text-sm sm:text-base">
                     دخول إلى المنصة وتفعيل الحساب ✨
                 </button>
             </form>
@@ -244,290 +260,292 @@
     </div>
 
     <!-- ==================== WELCOME BANNER ==================== -->
-    <div id="welcome-banner" class="hidden fixed top-6 left-1/2 transform -translate-x-1/2 z-50 bg-gradient-to-r from-emerald-600 via-teal-600 to-sky-600 text-white px-6 py-3 rounded-2xl shadow-2xl border border-white/30 animate-slide-down flex items-center gap-3 font-bold">
+    <div id="welcome-banner" class="hidden fixed top-6 left-1/2 transform -translate-x-1/2 z-50 bg-gradient-to-r from-emerald-600 via-teal-600 to-sky-600 text-white px-6 py-3.5 rounded-2xl shadow-2xl border border-white/30 animate-slide-down flex items-center gap-3 font-bold">
         <span class="text-2xl">🎉</span>
         <div>
-            <p id="welcome-msg-title" class="text-xs">أهلاً بك يا قهرمان!</p>
-            <p class="text-[10px] text-emerald-100 font-extrabold opacity-90">تم تسجيل دخولك بنجاح إلى منصة نبض مدينتي</p>
+            <p id="welcome-msg-title" class="text-sm sm:text-base">أهلاً بك يا قهرمان!</p>
+            <p class="text-xs text-emerald-100 font-extrabold opacity-90">تم تسجيل دخولك بنجاح إلى منصة نبض مدينتي</p>
         </div>
     </div>
 
     <!-- ==================== MAIN APP CONTAINER ==================== -->
-    <div id="main-app" class="hidden min-h-screen flex flex-col">
+    <div id="main-app" class="hidden min-h-screen w-full flex flex-col">
         
-        <header class="border-b border-emerald-500/20 backdrop-blur-md sticky top-0 z-40 shadow-sm" style="background-color: var(--header-bg);">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-                <div class="flex items-center space-x-3 space-x-reverse">
-                    <div class="h-12 w-28 px-1 flex items-center justify-center rounded-xl border border-emerald-500/30 shadow-md relative overflow-hidden" style="background: var(--card-bg);">
-                        <img src="logo.png" alt="Logo" class="absolute inset-0 w-full h-full object-contain p-1 z-10" onerror="this.src='https://via.placeholder.com/150x50?text=Logo'">
-                        <img src="logo-ekg.png" alt="Logo EKG" class="absolute inset-0 w-full h-full object-contain p-1 z-20 ekg-image-overlay" onerror="this.src='https://via.placeholder.com/150x50?text=Logo-EKG'">
+        <header class="w-full border-b border-emerald-500/20 backdrop-blur-md sticky top-0 z-40 shadow-sm" style="background-color: var(--header-bg);">
+            <div class="w-full px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+                <div class="flex items-center space-x-3 space-x-reverse shrink-0">
+                    <div class="logo-frame h-12 w-32 px-1 flex items-center justify-center rounded-xl border border-emerald-500/30 shadow-md relative overflow-hidden">
+                        <img src="logo.png" alt="Logo" class="logo-img absolute inset-0 w-full h-full object-contain p-1 z-10" onerror="this.src='https://via.placeholder.com/150x50?text=Logo'">
+                        <img src="logo-ekg.png" alt="Logo EKG" class="logo-img absolute inset-0 w-full h-full object-contain p-1 z-20 ekg-image-overlay" onerror="this.src='https://via.placeholder.com/150x50?text=Logo-EKG'">
                     </div>
                     <div>
-                        <h1 class="text-lg font-bold emerald-gradient-text">نبض مدينتي</h1>
-                        <p class="text-[10px] opacity-75">منصة بلاغات المدن الذكية</p>
+                        <h1 class="text-xl sm:text-2xl font-bold emerald-gradient-text">نبض مدينتي</h1>
+                        <p class="text-xs opacity-75">منصة بلاغات المدن الذكية</p>
                     </div>
                 </div>
 
-                <nav class="hidden lg:flex items-center space-x-1 space-x-reverse p-1.5 rounded-2xl border border-emerald-500/20 bg-emerald-500/5">
-                    <button onclick="switchTab('home')" id="nav-home" class="px-4 py-2 rounded-xl text-xs font-semibold transition-all bg-emerald-600 text-white shadow-md">الرئيسية</button>
-                    <button onclick="switchTab('report')" id="nav-report" class="px-4 py-2 rounded-xl text-xs font-semibold transition-all hover:text-emerald-600">إبلاغ عن مشكلة</button>
-                    <button onclick="switchTab('my-reports')" id="nav-my-reports" class="px-4 py-2 rounded-xl text-xs font-semibold transition-all hover:text-emerald-600">بلاغاتي والتصويت</button>
-                    <button onclick="switchTab('stats')" id="nav-stats" class="px-4 py-2 rounded-xl text-xs font-semibold transition-all hover:text-emerald-600">الإحصائيات</button>
-                    <button onclick="switchTab('emergency')" id="nav-emergency" class="px-4 py-2 rounded-xl text-xs font-semibold transition-all hover:text-emerald-600">دليل الطوارئ</button>
+                <nav class="hidden lg:flex items-center space-x-1.5 space-x-reverse p-1.5 rounded-2xl border border-emerald-500/20 bg-emerald-500/5">
+                    <button onclick="switchTab('home')" id="nav-home" class="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all bg-emerald-600 text-white shadow-md">الرئيسية</button>
+                    <button onclick="switchTab('report')" id="nav-report" class="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:text-emerald-600">إبلاغ عن مشكلة</button>
+                    <button onclick="switchTab('my-reports')" id="nav-my-reports" class="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:text-emerald-600">بلاغاتي والتصويت</button>
+                    <button onclick="switchTab('stats')" id="nav-stats" class="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:text-emerald-600">الإحصائيات</button>
+                    <button onclick="switchTab('emergency')" id="nav-emergency" class="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:text-emerald-600">الطوارئ وآلية المعالجة</button>
                 </nav>
 
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-3 shrink-0">
                     <!-- زر الوضع الليلي والنهاري (تفعيل وإطفاء) -->
-                    <button onclick="toggleThemeMode()" id="theme-toggle-btn" class="px-3 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-xs font-bold transition-all hover:scale-105 flex items-center gap-1.5 shadow-sm" style="color: var(--text-main);" title="تبديل المظهر">
+                    <button onclick="toggleThemeMode()" id="theme-toggle-btn" class="px-4 py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-xs sm:text-sm font-bold transition-all hover:scale-105 flex items-center gap-1.5 shadow-sm" style="color: var(--text-main);" title="تبديل المظهر">
                         <span id="theme-icon">🌙</span> <span id="theme-text">وضع ليلي: إطفاء</span>
                     </button>
 
                     <div class="text-right hidden sm:block">
-                        <p id="display-user-name" class="text-xs font-bold">مرحباً</p>
-                        <p class="text-[10px] text-emerald-600 font-medium">✨ مواطن نشط وموثق</p>
+                        <p id="display-user-name" class="text-sm font-bold">مرحباً</p>
+                        <p class="text-xs text-emerald-600 font-medium">✨ مواطن نشط وموثق</p>
                     </div>
                     <!-- زر الخروج -->
-                    <button onclick="logout()" class="px-3 py-2 rounded-xl logout-btn-custom text-xs font-medium transition-all shadow-sm">
+                    <button onclick="logout()" class="px-4 py-2.5 rounded-xl logout-btn-custom text-xs sm:text-sm font-medium transition-all shadow-sm">
                         خروج
                     </button>
                 </div>
             </div>
         </header>
 
-        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-1 w-full relative space-y-16">
+        <main class="w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-10 flex-1 relative space-y-16">
 
             <!-- ==================== TAB 0: HOME ==================== -->
-            <section id="tab-home" class="space-y-16 animate-fade-in relative">
+            <section id="tab-home" class="w-full space-y-16 animate-fade-in relative">
                 
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+                <div class="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 xl:gap-12 items-center">
                     <div class="lg:col-span-7 space-y-6 text-right z-10">
-                        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 text-xs font-semibold shadow-sm animate-pulse">
+                        <div class="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 text-sm sm:text-base font-semibold shadow-sm animate-pulse">
                             🌐 المستقبل الرقمي لإدارة المدن الذكية في العراق
                         </div>
-                        <h2 class="text-4xl sm:text-6xl font-black tracking-tight leading-tight">
+                        <h2 class="text-4xl sm:text-6xl xl:text-7xl font-black tracking-tight leading-tight">
                             مدينتك الأذكى، ابلغ عن الأعطال <span class="emerald-gradient-text">بكل سرعة وذكاء</span>
                         </h2>
-                        <p class="opacity-85 text-base sm:text-lg max-w-xl leading-relaxed">
+                        <p class="opacity-85 text-base sm:text-lg xl:text-xl max-w-4xl leading-relaxed">
                             منصة <strong>نبض مدينتي (CityPulse AI)</strong> هي نظام هندسي تفاعلي متكامل يربط المواطن بغرف العمليات البلدية مباشرة، مستخدمةً أحدث خوارزميات الذكاء الاصطناعي والتحديد الجغرافي لتحليل المشاكل وإنجازها فوراً.
                         </p>
                         <div class="flex flex-wrap gap-4 pt-4">
-                            <button onclick="switchTab('report')" class="px-8 py-4 rounded-2xl emerald-btn shadow-xl transition-all hover:scale-105 active:scale-95 text-base flex items-center gap-2">
+                            <button onclick="switchTab('report')" class="px-8 py-4 rounded-2xl emerald-btn shadow-xl transition-all hover:scale-105 active:scale-95 text-base sm:text-lg flex items-center gap-2">
                                 <span>ابدأ بإرسال بلاغ الآن</span> 🚀
                             </button>
-                            <button onclick="switchTab('stats')" class="px-8 py-4 rounded-2xl glass-card hover:opacity-90 border border-emerald-500/30 font-bold text-base transition-all hover:scale-105 active:scale-95 shadow-md">
+                            <button onclick="switchTab('stats')" class="px-8 py-4 rounded-2xl glass-card hover:opacity-90 border border-emerald-500/30 font-bold text-base sm:text-lg transition-all hover:scale-105 active:scale-95 shadow-md">
                                 عرض إحصائيات المدينة 📊
                             </button>
                         </div>
                     </div>
 
-                    <div class="lg:col-span-5 relative flex items-center justify-center py-10">
+                    <div class="lg:col-span-5 relative flex items-center justify-center pt-16 pb-8">
                         <div class="absolute inset-0 bg-gradient-to-tr from-emerald-400/20 to-sky-400/20 rounded-3xl blur-3xl animate-pulse"></div>
                         
-                        <div class="glass-card p-8 rounded-3xl relative z-10 animate-float text-center border border-emerald-500/30 shadow-2xl max-w-sm w-full space-y-6">
+                        <div class="glass-card p-6 sm:p-8 rounded-3xl relative z-10 animate-float text-center border border-emerald-500/30 shadow-2xl w-full space-y-5">
                             
-                            <div class="w-full h-36 mx-auto flex items-center justify-center p-3 rounded-2xl border border-emerald-500/30 shadow-xl relative overflow-hidden" style="background: var(--card-bg);">
-                                <img src="logo.png" alt="Logo" class="absolute inset-0 w-full h-full object-contain p-2 z-10" onerror="this.src='https://via.placeholder.com/300x100?text=Logo.png+Missing'">
-                                <img src="logo-ekg.png" alt="Logo EKG" class="absolute inset-0 w-full h-full object-contain p-2 z-20 ekg-image-overlay" onerror="this.src='https://via.placeholder.com/300x100?text=Logo-EKG.png+Missing'">
+                            <div class="logo-frame w-full h-44 sm:h-52 mx-auto flex items-center justify-center p-1 rounded-2xl border border-emerald-500/30 shadow-xl relative overflow-hidden">
+                                <img src="logo.png" alt="Logo" class="logo-img absolute inset-0 w-full h-full object-contain scale-125 z-10" onerror="this.src='https://via.placeholder.com/300x100?text=Logo.png+Missing'">
+                                <img src="logo-ekg.png" alt="Logo EKG" class="logo-img absolute inset-0 w-full h-full object-contain scale-125 z-20 ekg-image-overlay" onerror="this.src='https://via.placeholder.com/300x100?text=Logo-EKG.png+Missing'">
                             </div>
 
-                            <div class="space-y-1">
-                                <h3 class="text-base font-black emerald-gradient-text">الشعار الرسمي المعتمد</h3>
-                                <p class="text-[11px] opacity-70">نظام إدارة البلاغات والمدن الذكية المتكامل</p>
+                            <div class="space-y-1.5">
+                                <h3 class="text-xl sm:text-2xl font-black emerald-gradient-text">الشعار الرسمي المعتمد</h3>
+                                <p class="text-sm sm:text-base opacity-70">نظام إدارة البلاغات والمدن الذكية المتكامل</p>
                             </div>
                         </div>
 
-                        <div class="absolute -top-6 -right-6 sm:-right-10 glass-card px-4 py-2.5 rounded-2xl flex items-center gap-2 z-30 animate-float border border-emerald-500/30 shadow-xl">
-                            <span class="text-lg">🌍</span>
+                        <div class="absolute -top-7 right-2 sm:right-4 glass-card px-5 py-3 rounded-2xl flex items-center gap-2.5 z-30 border border-emerald-500/30 shadow-xl">
+                            <span class="text-2xl">🌍</span>
                             <div>
-                                <p class="text-[10px] opacity-70">تغطية شاملة</p>
-                                <p class="text-xs font-bold text-emerald-600">مدن ذكية متكاملة</p>
+                                <p class="text-xs opacity-70">تغطية شاملة</p>
+                                <p class="text-sm font-bold text-emerald-600">مدن ذكية متكاملة</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- أهداف ورؤية المنصة الإستراتيجية -->
-                <div class="glass-card rounded-3xl p-8 space-y-8 border border-emerald-500/30 shadow-xl relative z-10">
-                    <div class="text-center max-w-2xl mx-auto space-y-3">
-                        <span class="px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-700 text-xs font-bold">لماذا أنشأنا نبض مدينتي؟</span>
-                        <h3 class="text-2xl sm:text-3xl font-black">أهداف ورؤية المنصة الإستراتيجية</h3>
-                        <p class="text-xs sm:text-sm opacity-80 leading-relaxed">نهدف إلى القضاء على الروتين الإداري التقليدي وبناء جسر ثقة رقمي بين المواطن والدوائر الخدمية عبر آليات متطورة.</p>
+                <div class="w-full glass-card rounded-3xl p-6 sm:p-10 space-y-8 border border-emerald-500/30 shadow-xl relative z-10">
+                    <div class="text-center max-w-4xl mx-auto space-y-3">
+                        <span class="px-5 py-1.5 rounded-full bg-emerald-500/10 text-emerald-700 text-sm font-bold">لماذا أنشأنا نبض مدينتي؟</span>
+                        <h3 class="text-3xl sm:text-4xl font-black">أهداف ورؤية المنصة الإستراتيجية</h3>
+                        <p class="text-sm sm:text-base opacity-80 leading-relaxed">نهدف إلى القضاء على الروتين الإداري التقليدي وبناء جسر ثقة رقمي بين المواطن والدوائر الخدمية عبر آليات متطورة.</p>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <div class="p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 space-y-3">
-                            <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-lg">🎯</div>
-                            <h4 class="font-bold text-sm">الهدف الأساسي</h4>
-                            <p class="text-xs opacity-80 leading-relaxed">تحويل البلاغات البلدية إلى مهام آلية فورية توجه للفرق الميدانية المختصة دون تأخير.</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+                        <div class="p-6 sm:p-7 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 space-y-3.5">
+                            <div class="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-xl">🎯</div>
+                            <h4 class="font-bold text-base sm:text-lg">الهدف الأساسي</h4>
+                            <p class="text-sm sm:text-base opacity-80 leading-relaxed">تحويل البلاغات البلدية إلى مهام آلية فورية توجه للفرق الميدانية المختصة دون تأخير.</p>
                         </div>
-                        <div class="p-6 rounded-2xl bg-sky-500/5 border border-sky-500/20 space-y-3">
-                            <div class="w-10 h-10 rounded-xl bg-sky-600 text-white flex items-center justify-center font-bold text-lg">💡</div>
-                            <h4 class="font-bold text-sm">الذكاء الاصطناعي</h4>
-                            <p class="text-xs opacity-80 leading-relaxed">تصنيف الأعطال آلياً بناءً على الصور المرفوعة ودرجة خطورتها لتحديد الأولوية القصوى.</p>
+                        <div class="p-6 sm:p-7 rounded-2xl bg-sky-500/5 border border-sky-500/20 space-y-3.5">
+                            <div class="w-12 h-12 rounded-xl bg-sky-600 text-white flex items-center justify-center font-bold text-xl">💡</div>
+                            <h4 class="font-bold text-base sm:text-lg">الذكاء الاصطناعي</h4>
+                            <p class="text-sm sm:text-base opacity-80 leading-relaxed">تصنيف الأعطال آلياً بناءً على الصور المرفوعة ودرجة خطورتها لتحديد الأولوية القصوى.</p>
                         </div>
-                        <div class="p-6 rounded-2xl bg-teal-500/5 border border-teal-500/20 space-y-3">
-                            <div class="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center font-bold text-lg">📍</div>
-                            <h4 class="font-bold text-sm">التتبع الجغرافي</h4>
-                            <p class="text-xs opacity-80 leading-relaxed">التقاط إحداثيات GPS بدقة مترية لتوجيه الآليات مباشرة إلى موقع العطل دون وصف معقد.</p>
+                        <div class="p-6 sm:p-7 rounded-2xl bg-teal-500/5 border border-teal-500/20 space-y-3.5">
+                            <div class="w-12 h-12 rounded-xl bg-teal-600 text-white flex items-center justify-center font-bold text-xl">📍</div>
+                            <h4 class="font-bold text-base sm:text-lg">التتبع الجغرافي</h4>
+                            <p class="text-sm sm:text-base opacity-80 leading-relaxed">التقاط إحداثيات GPS بدقة مترية لتوجيه الآليات مباشرة إلى موقع العطل دون وصف معقد.</p>
                         </div>
-                        <div class="p-6 rounded-2xl bg-amber-500/5 border border-amber-500/20 space-y-3">
-                            <div class="w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center font-bold text-lg">🌟</div>
-                            <h4 class="font-bold text-sm">الشفافية الكاملة</h4>
-                            <p class="text-xs opacity-80 leading-relaxed">إتاحة سجل البلاغات للمواطن لمتابعة حالة إنجاز الشكوى خطوة بخطوة بكل شفافية.</p>
+                        <div class="p-6 sm:p-7 rounded-2xl bg-amber-500/5 border border-amber-500/20 space-y-3.5">
+                            <div class="w-12 h-12 rounded-xl bg-amber-600 text-white flex items-center justify-center font-bold text-xl">🌟</div>
+                            <h4 class="font-bold text-base sm:text-lg">الشفافية الكاملة</h4>
+                            <p class="text-sm sm:text-base opacity-80 leading-relaxed">إتاحة سجل البلاغات للمواطن لمتابعة حالة إنجاز الشكوى خطوة بخطوة بكل شفافية.</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- دليل الاستخدام المبسط -->
-                <div class="space-y-8 relative z-10">
-                    <div class="text-center max-w-2xl mx-auto space-y-2">
-                        <span class="px-4 py-1.5 rounded-full bg-sky-500/10 text-sky-700 text-xs font-bold">دليل الاستخدام المبسط</span>
-                        <h3 class="text-2xl sm:text-3xl font-black">كيف يعمل نظام نبض مدينتي؟</h3>
-                        <p class="text-xs opacity-75">أربع خطوات بسيطة تفصلك عن معالجة المشكلة الخدمية في منطقتك</p>
+                <div class="w-full space-y-8 relative z-10">
+                    <div class="text-center max-w-4xl mx-auto space-y-2.5">
+                        <span class="px-5 py-1.5 rounded-full bg-sky-500/10 text-sky-700 text-sm font-bold">دليل الاستخدام المبسط</span>
+                        <h3 class="text-3xl sm:text-4xl font-black">كيف يعمل نظام نبض مدينتي؟</h3>
+                        <p class="text-sm sm:text-base opacity-75">أربع خطوات بسيطة تفصلك عن معالجة المشكلة الخدمية في منطقتك</p>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <div class="glass-card p-6 rounded-3xl space-y-4 relative overflow-hidden">
-                            <div class="absolute -top-4 -left-4 w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center text-emerald-600 font-black text-xl">1</div>
-                            <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center text-xl font-bold animate-float">📸</div>
-                            <h4 class="font-bold text-base">التقاط المشكلة</h4>
-                            <p class="text-xs opacity-80 leading-relaxed">التقط صورة واضحة للعطل (حفرة في الشارع، أعمدة كهربائية، محولات، أو نفايات).</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+                        <div class="glass-card p-6 sm:p-7 rounded-3xl space-y-4 relative overflow-hidden">
+                            <div class="absolute -top-3 -left-3 w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center text-emerald-600 font-black text-xl">1</div>
+                            <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center text-2xl font-bold animate-float">📸</div>
+                            <h4 class="font-bold text-base sm:text-lg">التقاط المشكلة</h4>
+                            <p class="text-sm sm:text-base opacity-80 leading-relaxed">التقط صورة واضحة للعطل (حفرة في الشارع، أعمدة كهربائية، محولات، أو نفايات).</p>
                         </div>
-                        <div class="glass-card p-6 rounded-3xl space-y-4 relative overflow-hidden">
-                            <div class="absolute -top-4 -left-4 w-16 h-16 bg-sky-500/10 rounded-full flex items-center justify-center text-sky-600 font-black text-xl">2</div>
-                            <div class="w-12 h-12 rounded-2xl bg-sky-500/10 text-sky-600 flex items-center justify-center text-xl font-bold animate-float">📍</div>
-                            <h4 class="font-bold text-base">تحديد الموقع GPS أو يدوياً</h4>
-                            <p class="text-xs opacity-80 leading-relaxed">حدد موقعك الحالي تلقائياً عبر الأقمار الصناعية أو اختره بدقة من الخريطة اليدوية.</p>
+                        <div class="glass-card p-6 sm:p-7 rounded-3xl space-y-4 relative overflow-hidden">
+                            <div class="absolute -top-3 -left-3 w-16 h-16 bg-sky-500/10 rounded-full flex items-center justify-center text-sky-600 font-black text-xl">2</div>
+                            <div class="w-14 h-14 rounded-2xl bg-sky-500/10 text-sky-600 flex items-center justify-center text-2xl font-bold animate-float">📍</div>
+                            <h4 class="font-bold text-base sm:text-lg">تحديد الموقع GPS أو يدوياً</h4>
+                            <p class="text-sm sm:text-base opacity-80 leading-relaxed">حدد موقعك الحالي تلقائياً عبر الأقمار الصناعية أو اختره بدقة من الخريطة اليدوية.</p>
                         </div>
-                        <div class="glass-card p-6 rounded-3xl space-y-4 relative overflow-hidden">
-                            <div class="absolute -top-4 -left-4 w-16 h-16 bg-teal-500/10 rounded-full flex items-center justify-center text-teal-600 font-black text-xl">3</div>
-                            <div class="w-12 h-12 rounded-2xl bg-teal-500/10 text-teal-600 flex items-center justify-center text-xl font-bold animate-float">🤖</div>
-                            <h4 class="font-bold text-base">التحليل والتوجيه الآلي</h4>
-                            <p class="text-xs opacity-80 leading-relaxed">الذكاء الاصطناعي يصنف البلاغ آلياً ويوجهه مباشرة إلى غرفة العمليات المختصة.</p>
+                        <div class="glass-card p-6 sm:p-7 rounded-3xl space-y-4 relative overflow-hidden">
+                            <div class="absolute -top-3 -left-3 w-16 h-16 bg-teal-500/10 rounded-full flex items-center justify-center text-teal-600 font-black text-xl">3</div>
+                            <div class="w-14 h-14 rounded-2xl bg-teal-500/10 text-teal-600 flex items-center justify-center text-2xl font-bold animate-float">🤖</div>
+                            <h4 class="font-bold text-base sm:text-lg">التحليل والتوجيه الآلي</h4>
+                            <p class="text-sm sm:text-base opacity-80 leading-relaxed">الذكاء الاصطناعي يصنف البلاغ آلياً ويوجهه مباشرة إلى غرفة العمليات المختصة.</p>
                         </div>
-                        <div class="glass-card p-6 rounded-3xl space-y-4 relative overflow-hidden">
-                            <div class="absolute -top-4 -left-4 w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center text-amber-600 font-black text-xl">4</div>
-                            <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center text-xl font-bold animate-float">✅</div>
-                            <h4 class="font-bold text-base">المعالجة والإنجاز</h4>
-                            <p class="text-xs opacity-80 leading-relaxed">تنزل الفرق الفنية للموقع لمعالجة المشكلة، ويصلك إشعار فوري باكتمال الصيانة بنجاح.</p>
+                        <div class="glass-card p-6 sm:p-7 rounded-3xl space-y-4 relative overflow-hidden">
+                            <div class="absolute -top-3 -left-3 w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center text-amber-600 font-black text-xl">4</div>
+                            <div class="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center text-2xl font-bold animate-float">✅</div>
+                            <h4 class="font-bold text-base sm:text-lg">المعالجة والإنجاز</h4>
+                            <p class="text-sm sm:text-base opacity-80 leading-relaxed">تنزل الفرق الفنية للموقع لمعالجة المشكلة، ويصلك إشعار فوري باكتمال الصيانة بنجاح.</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- مميزات إضافية -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10 pt-4">
-                    <div class="glass-card p-6 rounded-3xl space-y-3">
-                        <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center text-xl font-bold shadow-sm">⚡</div>
-                        <h3 class="text-lg font-bold">استجابة فائقة السرعة</h3>
-                        <p class="text-xs opacity-80 leading-relaxed">ربط مباشر مع غرف العمليات لتقليل وقت الاستجابة للبلاغات الطارئة إلى أقل من 24 ساعة.</p>
+                <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10 pt-2">
+                    <div class="glass-card p-7 rounded-3xl space-y-3.5">
+                        <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center text-2xl font-bold shadow-sm">⚡</div>
+                        <h3 class="text-lg sm:text-xl font-bold">استجابة فائقة السرعة</h3>
+                        <p class="text-sm sm:text-base opacity-80 leading-relaxed">ربط مباشر مع غرف العمليات لتقليل وقت الاستجابة للبلاغات الطارئة إلى أقل من 24 ساعة.</p>
                     </div>
-                    <div class="glass-card p-6 rounded-3xl space-y-3">
-                        <div class="w-12 h-12 rounded-2xl bg-sky-500/10 text-sky-600 flex items-center justify-center text-xl font-bold shadow-sm">🛡️</div>
-                        <h3 class="text-lg font-bold">أمن وموثوقية عالية</h3>
-                        <p class="text-xs opacity-80 leading-relaxed">حفظ بيانات المواطنين وتشفير سجلات البلاغات لضمان الخصوصية التامة ومنع البلاغات الوهمية.</p>
+                    <div class="glass-card p-7 rounded-3xl space-y-3.5">
+                        <div class="w-14 h-14 rounded-2xl bg-sky-500/10 text-sky-600 flex items-center justify-center text-2xl font-bold shadow-sm">🛡️</div>
+                        <h3 class="text-lg sm:text-xl font-bold">أمن وموثوقية عالية</h3>
+                        <p class="text-sm sm:text-base opacity-80 leading-relaxed">حفظ بيانات المواطنين وتشفير سجلات البلاغات لضمان الخصوصية التامة ومنع البلاغات الوهمية.</p>
                     </div>
-                    <div class="glass-card p-6 rounded-3xl space-y-3">
-                        <div class="w-12 h-12 rounded-2xl bg-teal-500/10 text-teal-600 flex items-center justify-center text-xl font-bold shadow-sm">📊</div>
-                        <h3 class="text-lg font-bold">تقارير وإحصائيات حية</h3>
-                        <p class="text-xs opacity-80 leading-relaxed">لوحة تحكم ذكية تعرض مؤشرات الأداء الخدمي ونسب الإنجاز في أحياء المدينة بشكل لحظي.</p>
+                    <div class="glass-card p-7 rounded-3xl space-y-3.5">
+                        <div class="w-14 h-14 rounded-2xl bg-teal-500/10 text-teal-600 flex items-center justify-center text-2xl font-bold shadow-sm">📊</div>
+                        <h3 class="text-lg sm:text-xl font-bold">تقارير وإحصائيات حية</h3>
+                        <p class="text-sm sm:text-base opacity-80 leading-relaxed">لوحة تحكم ذكية تعرض مؤشرات الأداء الخدمي ونسب الإنجاز في أحياء المدينة بشكل لحظي.</p>
                     </div>
                 </div>
 
             </section>
 
             <!-- ==================== TAB 1: REPORT ISSUE (With Instant AI Preview) ==================== -->
-            <section id="tab-report" class="hidden space-y-8 animate-fade-in">
-                <div class="text-center max-w-2xl mx-auto space-y-2">
-                    <h2 class="text-3xl font-black">إرسال بلاغ خدمي جديد</h2>
-                    <p class="text-xs opacity-75">ارفع الصورة وسيقوم الذكاء الاصطناعي بتحليلها وتحديد التصنيف ورصدها تلقائياً</p>
+            <section id="tab-report" class="hidden w-full max-w-5xl mx-auto space-y-8 animate-fade-in">
+                <div class="text-center max-w-3xl mx-auto space-y-2">
+                    <h2 class="text-3xl sm:text-4xl font-black">إرسال بلاغ خدمي جديد</h2>
+                    <p class="text-sm sm:text-base opacity-75">ارفع الصورة وسيقوم الذكاء الاصطناعي بتحليلها وتحديد التصنيف ورصدها تلقائياً</p>
                 </div>
 
-                <div class="max-w-2xl mx-auto glass-card rounded-3xl p-6 sm:p-8 shadow-2xl border border-emerald-500/30 relative">
+                <div class="w-full glass-card rounded-3xl p-6 sm:p-8 shadow-2xl border border-emerald-500/30 relative">
                     
-                    <div id="error-alert-banner" class="hidden mb-6 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-700 text-xs sm:text-sm font-bold flex items-center gap-3 animate-slide-down shadow-sm">
+                    <div id="error-alert-banner" class="hidden mb-6 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-700 text-sm font-bold flex items-center gap-3 animate-slide-down shadow-sm">
                         <span class="text-2xl">⚠️</span>
                         <div>
                             <p class="font-black">تنبيه بخصوص البيانات الناقصة!</p>
-                            <p id="error-alert-msg" class="text-[11px] font-medium mt-0.5">يرجى إرفاق صورة للمشكلة قبل إرسال البلاغ.</p>
+                            <p id="error-alert-msg" class="text-xs sm:text-sm font-medium mt-0.5">يرجى إرفاق صورة للمشكلة قبل إرسال البلاغ.</p>
                         </div>
                     </div>
 
-                    <div id="inpage-success-banner" class="hidden mb-6 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 text-xs sm:text-sm font-bold flex items-center gap-3 animate-slide-down">
+                    <div id="inpage-success-banner" class="hidden mb-6 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 text-sm font-bold flex items-center gap-3 animate-slide-down">
                         <span class="text-2xl">🎉</span>
                         <div>
                             <p class="font-black">تم إرسال البلاغ وتحليله بنجاح!</p>
-                            <p class="text-[11px] font-medium mt-0.5">تم رصد وتصنيف المشكلة آلياً وجاري توجيهها لغرفة العمليات...</p>
+                            <p class="text-xs sm:text-sm font-medium mt-0.5">تم رصد وتصنيف المشكلة آلياً وجاري توجيهها لغرفة العمليات...</p>
                         </div>
                     </div>
 
                     <form id="report-form" onsubmit="submitReport(event)" class="space-y-6">
                         <div>
-                            <label class="block text-xs font-semibold mb-2">صورة المشكلة الميدانية</label>
+                            <label class="block text-sm font-semibold mb-2">صورة المشكلة الميدانية</label>
                             <div class="border-2 border-dashed border-emerald-500/40 hover:border-emerald-500 rounded-2xl p-6 text-center cursor-pointer transition-all bg-emerald-500/5 group">
                                 <input type="file" id="issue-image" accept="image/*" class="hidden" onchange="previewImage(event)">
-                                <div onclick="document.getElementById('issue-image').click()" class="space-y-2">
-                                    <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-600 mx-auto flex items-center justify-center text-xl group-hover:scale-110 transition-transform">📷</div>
-                                    <p class="text-xs font-medium">انقر لرفع صورة أو اسحبها هنا للتحليل الفوري</p>
+                                <div onclick="document.getElementById('issue-image').click()" class="space-y-2.5">
+                                    <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-600 mx-auto flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">📷</div>
+                                    <p class="text-sm sm:text-base font-medium">انقر لرفع صورة أو اسحبها هنا للتحليل الفوري</p>
                                     <div id="image-preview-container" class="hidden mt-4">
-                                        <img id="image-preview" class="max-h-40 mx-auto rounded-xl border border-emerald-500/30 object-cover">
+                                        <img id="image-preview" class="max-h-48 mx-auto rounded-xl border border-emerald-500/30 object-cover">
                                     </div>
                                 </div>
                             </div>
 
                             <!-- ⚡ نظام المعاينة الذكية الفورية (Instant AI Preview) الجديد -->
-                            <div id="ai-preview-box" class="hidden mt-4 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-xs space-y-2 animate-fade-in shadow-sm">
+                            <div id="ai-preview-box" class="hidden mt-4 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-sm space-y-2 animate-fade-in shadow-sm">
                                 <p class="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
                                     <span>✨</span> نتائج المعاينة الذكية الفورية (Instant AI Preview):
                                 </p>
-                                <div id="ai-preview-content" class="space-y-1 text-[11px] opacity-90">
+                                <div id="ai-preview-content" class="space-y-1 text-xs sm:text-sm opacity-90">
                                     جاري فحص الصورة...
                                 </div>
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold mb-2">تصنيف العطل الخدمي (تحديد تلقائي بالذكاء الاصطناعي أو اختيار يدوي)</label>
-                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                <button type="button" onclick="selectCategory('potholes', this)" class="category-btn p-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500 text-center transition-all flex flex-col items-center gap-1 text-xs">
+                            <label class="block text-sm font-semibold mb-2">تصنيف العطل الخدمي (تحديد تلقائي بالذكاء الاصطناعي أو اختيار يدوي)</label>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+                                <button type="button" onclick="selectCategory('potholes', this)" class="category-btn p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500 text-center transition-all flex flex-col items-center gap-1.5 text-sm">
                                     ⚠️ <span class="font-medium">حفر وشوارع</span>
                                 </button>
-                                <button type="button" onclick="selectCategory('electricity', this)" class="category-btn p-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500 text-center transition-all flex flex-col items-center gap-1 text-xs">
+                                <button type="button" onclick="selectCategory('electricity', this)" class="category-btn p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500 text-center transition-all flex flex-col items-center gap-1.5 text-sm">
                                     ⚡ <span>كهرباء وإنارة</span>
                                 </button>
-                                <button type="button" onclick="selectCategory('waste', this)" class="category-btn p-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500 text-center transition-all flex flex-col items-center gap-1 text-xs">
+                                <button type="button" onclick="selectCategory('waste', this)" class="category-btn p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500 text-center transition-all flex flex-col items-center gap-1.5 text-sm">
                                     🗑️ <span>نفايات وتلوث</span>
                                 </button>
-                                <button type="button" onclick="selectCategory('other', this)" class="category-btn p-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500 text-center transition-all flex flex-col items-center gap-1 text-xs">
+                                <button type="button" onclick="selectCategory('other', this)" class="category-btn p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500 text-center transition-all flex flex-col items-center gap-1.5 text-sm">
                                     ❓ <span>أخرى</span>
                                 </button>
                             </div>
 
                             <!-- حقل إضافي يظهر فقط عند اختيار "أخرى" -->
                             <div id="other-desc-container" class="hidden mt-3 animate-fade-in">
-                                <label class="block text-xs font-semibold mb-1 text-emerald-600 dark:text-emerald-400">يرجى توضيح المشكلة بالتفصيل (أخرى):</label>
-                                <input type="text" id="other-issue-input" placeholder="اكتب وصفاً دقيقاً للمشكلة غير المصنفة..." class="w-full dynamic-input border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-emerald-500 transition-all">
+                                <label class="block text-sm font-semibold mb-1 text-emerald-600 dark:text-emerald-400">يرجى توضيح المشكلة بالتفصيل (أخرى):</label>
+                                <input type="text" id="other-issue-input" placeholder="اكتب وصفاً دقيقاً للمشكلة غير المصنفة..." class="w-full dynamic-input border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500 transition-all">
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold mb-2">الموقع الجغرافي (GPS أو تحديد يدوي من الخريطة)</label>
-                            <div class="flex gap-2">
-                                <input type="text" id="location-input" required placeholder="حدد الموقع آلياً أو يدوياً من الخريطة..." class="flex-1 dynamic-input border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-emerald-500 transition-all">
-                                <button type="button" onclick="detectLocation()" class="px-3 py-3 rounded-xl border border-emerald-500/30 text-emerald-700 font-medium text-xs transition-all flex items-center gap-1 hover:scale-105 bg-emerald-500/5">
-                                    📍 موقعي الحالي
-                                </button>
-                                <button type="button" onclick="openMapModal()" class="px-3 py-3 rounded-xl border border-emerald-500/30 text-emerald-800 font-medium text-xs transition-all flex items-center gap-1 hover:scale-105 bg-emerald-500/10">
-                                    🗺️ تحديد يدوي
-                                </button>
+                            <label class="block text-sm font-semibold mb-2">الموقع الجغرافي (GPS أو تحديد يدوي من الخريطة)</label>
+                            <div class="flex flex-col sm:flex-row gap-2.5">
+                                <input type="text" id="location-input" required placeholder="حدد الموقع آلياً أو يدوياً من الخريطة..." class="flex-1 dynamic-input border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500 transition-all">
+                                <div class="flex gap-2">
+                                    <button type="button" onclick="detectLocation()" class="px-4 py-3 rounded-xl border border-emerald-500/30 text-emerald-700 font-medium text-sm transition-all flex items-center gap-1 hover:scale-105 bg-emerald-500/5">
+                                        📍 موقعي الحالي
+                                    </button>
+                                    <button type="button" onclick="openMapModal()" class="px-4 py-3 rounded-xl border border-emerald-500/30 text-emerald-800 font-medium text-sm transition-all flex items-center gap-1 hover:scale-105 bg-emerald-500/10">
+                                        🗺️ تحديد يدوي
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold mb-2">تفاصيل إضافية أو أقرب معلم</label>
-                            <textarea id="issue-desc" rows="3" placeholder="اكتب تفاصيل إضافية عن المشكلة..." class="w-full dynamic-input border rounded-xl p-3 text-xs focus:outline-none focus:border-emerald-500 transition-all"></textarea>
+                            <label class="block text-sm font-semibold mb-2">تفاصيل إضافية أو أقرب معلم</label>
+                            <textarea id="issue-desc" rows="3" placeholder="اكتب تفاصيل إضافية عن المشكلة..." class="w-full dynamic-input border rounded-xl p-3.5 text-sm focus:outline-none focus:border-emerald-500 transition-all"></textarea>
                         </div>
 
-                        <button type="submit" class="w-full py-4 rounded-2xl emerald-btn shadow-lg text-sm">
+                        <button type="submit" class="w-full py-4 rounded-2xl emerald-btn shadow-lg text-base">
                             تحليل وإرسال البلاغ إلى غرفة العمليات 🚀
                         </button>
                     </form>
@@ -535,91 +553,316 @@
             </section>
 
             <!-- ==================== TAB 2: MY REPORTS (With Community Upvoting) ==================== -->
-            <section id="tab-my-reports" class="hidden space-y-6 animate-fade-in">
-                <div class="flex justify-between items-center">
+            <section id="tab-my-reports" class="hidden w-full space-y-6 animate-fade-in">
+                <div class="flex flex-wrap justify-between items-center gap-4">
                     <div>
-                        <h2 class="text-2xl font-bold">سجل بلاغاتي والتصويت المجتمعي</h2>
-                        <p class="text-xs opacity-75">تابع حالة إنجاز بلاغتك أو ادعم البلاغات القريبة عبر زر "عندي نفس المشكلة (+1)"</p>
+                        <h2 class="text-3xl sm:text-4xl font-bold">سجل بلاغاتي والتصويت المجتمعي</h2>
+                        <p class="text-sm sm:text-base opacity-75">تابع حالة إنجاز بلاغتك أو ادعم البلاغات القريبة عبر زر "عندي نفس المشكلة (+1)"</p>
                     </div>
-                    <div id="reports-count-badge" class="px-4 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 font-semibold text-xs">
+                    <div id="reports-count-badge" class="px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 font-semibold text-sm">
                         0 بلاغات نشطة
                     </div>
                 </div>
 
-                <div id="reports-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div id="reports-list" class="w-full grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                     <div class="col-span-full text-center py-16 glass-card rounded-3xl">
-                        <p class="opacity-70 text-sm">جاري جلب البلاغات والتصويتات من السيرفر...</p>
+                        <p class="opacity-70 text-sm sm:text-base">جاري جلب البلاغات والتصويتات من السيرفر...</p>
                     </div>
                 </div>
             </section>
 
             <!-- ==================== TAB 3: STATS (Updated with Heatmap & Dynamic Metrics) ==================== -->
-            <section id="tab-stats" class="hidden space-y-8 animate-fade-in">
-                <div class="text-center max-w-xl mx-auto space-y-2">
-                    <h2 class="text-3xl font-black">إحصائيات وحالة المدينة والخرائط الحرارية</h2>
-                    <p class="text-xs opacity-75">مؤشرات الأداء الحي وكثافة البلاغات الميدانية موزعة جغرافياً في أحياء كركوك</p>
+            <section id="tab-stats" class="hidden w-full space-y-8 animate-fade-in">
+                <div class="text-center max-w-4xl mx-auto space-y-2">
+                    <h2 class="text-3xl sm:text-4xl font-black">إحصائيات وحالة المدينة والخرائط الحرارية</h2>
+                    <p class="text-sm sm:text-base opacity-75">مؤشرات الأداء الحي وكثافة البلاغات الميدانية موزعة جغرافياً في أحياء كركوك</p>
                 </div>
 
                 <!-- إحصائيات سريعة متصلة بالسيرفر -->
-                <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <div class="w-full grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
                     <div class="glass-card p-6 rounded-3xl text-center space-y-2 border-l-4 border-emerald-500">
-                        <p class="text-3xl font-black text-emerald-600" id="stats-total-reports">0</p>
-                        <p class="text-xs opacity-80">إجمالي البلاغات المسجلة</p>
+                        <p class="text-3xl sm:text-4xl font-black text-emerald-600" id="stats-total-reports">0</p>
+                        <p class="text-sm opacity-80">إجمالي البلاغات المسجلة</p>
                     </div>
                     <div class="glass-card p-6 rounded-3xl text-center space-y-2 border-l-4 border-amber-500">
-                        <p class="text-3xl font-black text-amber-500" id="stats-pending-reports">0</p>
-                        <p class="text-xs opacity-80">قيد المعالجة الميدانية</p>
+                        <p class="text-3xl sm:text-4xl font-black text-amber-500" id="stats-pending-reports">0</p>
+                        <p class="text-sm opacity-80">قيد المعالجة الميدانية</p>
                     </div>
                     <div class="glass-card p-6 rounded-3xl text-center space-y-2 border-l-4 border-sky-500">
-                        <p class="text-3xl font-black text-sky-600" id="stats-resolved-reports">0</p>
-                        <p class="text-xs opacity-80">البلاغات المنجزة والمقبولة</p>
+                        <p class="text-3xl sm:text-4xl font-black text-sky-600" id="stats-resolved-reports">0</p>
+                        <p class="text-sm opacity-80">البلاغات المنجزة والمقبولة</p>
                     </div>
                     <div class="glass-card p-6 rounded-3xl text-center space-y-2 border-l-4 border-teal-500">
-                        <p class="text-3xl font-black text-teal-600">94.8%</p>
-                        <p class="text-xs opacity-80">مؤشر كفاءة الاستجابة</p>
+                        <p class="text-3xl sm:text-4xl font-black text-teal-600">94.8%</p>
+                        <p class="text-sm opacity-80">مؤشر كفاءة الاستجابة</p>
                     </div>
                 </div>
 
                 <!-- الخريطة الحرارية التفاعلية للبلاغات -->
-                <div class="glass-card p-6 rounded-3xl space-y-4 border border-emerald-500/30 shadow-2xl">
+                <div class="w-full glass-card p-6 rounded-3xl space-y-4 border border-emerald-500/30 shadow-2xl">
                     <div class="flex items-center justify-between border-b border-emerald-500/20 pb-3">
                         <div>
-                            <h3 class="text-base font-black flex items-center gap-2">
+                            <h3 class="text-lg sm:text-xl font-black flex items-center gap-2">
                                 <span>🔥</span> الخريطة الحرارية لكثافة الأعطال والبلاغات (Heatmap)
                             </h3>
-                            <p class="text-[11px] opacity-75">توضيح بؤر الكثافة والضغط الخدمي في مناطق المدينة استناداً إلى إحداثيات البلاغات الفعلية</p>
+                            <p class="text-xs sm:text-sm opacity-75">توضيح بؤر الكثافة والضغط الخدمي في مناطق المدينة استناداً إلى إحداثيات البلاغات الفعلية</p>
                         </div>
-                        <span class="px-3 py-1 rounded-full bg-rose-500/10 text-rose-600 text-xs font-bold border border-rose-500/30 animate-pulse">تحديث حي 🟢</span>
+                        <span class="px-3 py-1 rounded-full bg-rose-500/10 text-rose-600 text-xs sm:text-sm font-bold border border-rose-500/30 animate-pulse">تحديث حي 🟢</span>
                     </div>
 
-                    <div class="relative w-full h-[450px] rounded-2xl overflow-hidden border border-emerald-500/30 shadow-inner">
+                    <div class="relative w-full h-[520px] rounded-2xl overflow-hidden border border-emerald-500/30 shadow-inner">
                         <div id="stats-mapbox-container" class="w-full h-full"></div>
                     </div>
                 </div>
             </section>
 
-            <!-- ==================== TAB 4: EMERGENCY ==================== -->
-            <section id="tab-emergency" class="hidden space-y-6 animate-fade-in">
-                <div class="text-center max-w-xl mx-auto space-y-2">
-                    <h2 class="text-2xl font-bold">دليل الطوارئ والأرقام الخدمية</h2>
-                    <p class="text-xs opacity-75">اتصال سريع بالدوائر الخدمية والقطاعات الحيوية في المدينة</p>
+            <!-- ==================== TAB 4: EMERGENCY NUMBERS, WORKFLOW, AI SEVERITY & VOTING ==================== -->
+            <section id="tab-emergency" class="hidden w-full space-y-10 animate-fade-in">
+                <div class="text-center max-w-4xl mx-auto space-y-2">
+                    <span class="px-5 py-1.5 rounded-full bg-rose-500/10 text-rose-600 text-sm font-bold">دليل الاستجابة السريعة والحوكمة الذكية</span>
+                    <h2 class="text-3xl sm:text-4xl font-black">أرقام الطوارئ وآلية معالجة وتقييم البلاغات</h2>
+                    <p class="text-sm sm:text-base opacity-75">أرقام الطوارئ والخدمات السريعة للنسخ الفوري إلى جانب شرح متكامل لكيفية معالجة البلاغ وتقدير خطورته بالذكاء الاصطناعي والتصويت المجتمعي</p>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div class="glass-card p-5 rounded-2xl space-y-2 border-l-4 border-emerald-500">
-                        <p class="text-sm font-bold">غرفة عمليات البلدية</p>
-                        <p class="text-xs text-emerald-600 font-mono font-bold">123 أو 0770XXXXXXX</p>
+
+                <!-- 0. قسم أرقام الطوارئ والخدمات السريعة (في الأعلى - نسخ فقط بدون زر اتصال) -->
+                <div class="w-full glass-card rounded-3xl p-6 sm:p-8 space-y-6 border border-rose-500/30 shadow-xl">
+                    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-emerald-500/20 pb-4">
+                        <div>
+                            <span class="px-4 py-1 rounded-full bg-rose-500/10 text-rose-600 text-xs sm:text-sm font-bold">دليل الأرقام المعتمد على مدار 24 ساعة</span>
+                            <h3 class="text-xl sm:text-2xl font-black mt-1">أرقام الطوارئ والدوائر الخدمية السريعة</h3>
+                        </div>
+                        <span id="copy-number-toast" class="hidden px-4 py-1.5 rounded-xl bg-emerald-500/15 text-emerald-600 text-xs sm:text-sm font-bold border border-emerald-500/30">
+                            ✓ تم نسخ الرقم بنجاح
+                        </span>
                     </div>
-                    <div class="glass-card p-5 rounded-2xl space-y-2 border-l-4 border-sky-500">
-                        <p class="text-sm font-bold">طوارئ شبكات الماء</p>
-                        <p class="text-xs text-sky-600 font-mono font-bold">155 أو 0771XXXXXXX</p>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <!-- الشرطة 911 -->
+                        <div class="p-5 rounded-2xl bg-sky-500/10 border border-sky-500/30 flex flex-col justify-between space-y-4 text-center transition-all hover:scale-[1.02]">
+                            <div class="space-y-1.5">
+                                <div class="w-12 h-12 mx-auto rounded-2xl bg-sky-600 text-white flex items-center justify-center text-2xl shadow-md">🚓</div>
+                                <h4 class="font-black text-base">الشرطة والنجدة</h4>
+                                <p class="text-3xl font-black text-sky-600 tracking-wider" dir="ltr">911</p>
+                                <p class="text-xs opacity-75">البلاغات الأمنية والحوادث الطارئة</p>
+                            </div>
+                            <button type="button" onclick="copyEmergencyNumber('911')" class="w-full py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs sm:text-sm font-bold transition shadow-sm flex items-center justify-center gap-1.5">
+                                <span>📋</span> <span>نسخ الرقم</span>
+                            </button>
+                        </div>
+
+                        <!-- الإسعاف 122 -->
+                        <div class="p-5 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex flex-col justify-between space-y-4 text-center transition-all hover:scale-[1.02]">
+                            <div class="space-y-1.5">
+                                <div class="w-12 h-12 mx-auto rounded-2xl bg-rose-600 text-white flex items-center justify-center text-2xl shadow-md">🚑</div>
+                                <h4 class="font-black text-base">الإسعاف الفوري</h4>
+                                <p class="text-3xl font-black text-rose-600 tracking-wider" dir="ltr">122</p>
+                                <p class="text-xs opacity-75">الحالات الطبية الحرجة والإنقاذ الصحي</p>
+                            </div>
+                            <button type="button" onclick="copyEmergencyNumber('122')" class="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs sm:text-sm font-bold transition shadow-sm flex items-center justify-center gap-1.5">
+                                <span>📋</span> <span>نسخ الرقم</span>
+                            </button>
+                        </div>
+
+                        <!-- الدفاع المدني 115 -->
+                        <div class="p-5 rounded-2xl bg-orange-500/10 border border-orange-500/30 flex flex-col justify-between space-y-4 text-center transition-all hover:scale-[1.02]">
+                            <div class="space-y-1.5">
+                                <div class="w-12 h-12 mx-auto rounded-2xl bg-orange-600 text-white flex items-center justify-center text-2xl shadow-md">🚒</div>
+                                <h4 class="font-black text-base">الدفاع المدني</h4>
+                                <p class="text-3xl font-black text-orange-600 tracking-wider" dir="ltr">115</p>
+                                <p class="text-xs opacity-75">إطفاء الحرائق وعمليات الإنقاذ</p>
+                            </div>
+                            <button type="button" onclick="copyEmergencyNumber('115')" class="w-full py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs sm:text-sm font-bold transition shadow-sm flex items-center justify-center gap-1.5">
+                                <span>📋</span> <span>نسخ الرقم</span>
+                            </button>
+                        </div>
+
+                        <!-- دائرة الكهرباء 159 -->
+                        <div class="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col justify-between space-y-4 text-center transition-all hover:scale-[1.02]">
+                            <div class="space-y-1.5">
+                                <div class="w-12 h-12 mx-auto rounded-2xl bg-amber-500 text-white flex items-center justify-center text-2xl shadow-md">⚡</div>
+                                <h4 class="font-black text-base">دائرة الكهرباء</h4>
+                                <p class="text-3xl font-black text-amber-600 tracking-wider" dir="ltr">159</p>
+                                <p class="text-xs opacity-75">صيانة الشبكات وأعطال المحولات</p>
+                            </div>
+                            <button type="button" onclick="copyEmergencyNumber('159')" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs sm:text-sm font-bold transition shadow-sm flex items-center justify-center gap-1.5">
+                                <span>📋</span> <span>نسخ الرقم</span>
+                            </button>
+                        </div>
+
+                        <!-- البلدية 5599 -->
+                        <div class="p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex flex-col justify-between space-y-4 text-center transition-all hover:scale-[1.02]">
+                            <div class="space-y-1.5">
+                                <div class="w-12 h-12 mx-auto rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-2xl shadow-md">🏛️</div>
+                                <h4 class="font-black text-base">البلدية والخدمات</h4>
+                                <p class="text-3xl font-black text-emerald-600 tracking-wider" dir="ltr">5599</p>
+                                <p class="text-xs opacity-75">بلاغات الطرق والنظافة والخدمات</p>
+                            </div>
+                            <button type="button" onclick="copyEmergencyNumber('5599')" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold transition shadow-sm flex items-center justify-center gap-1.5">
+                                <span>📋</span> <span>نسخ الرقم</span>
+                            </button>
+                        </div>
                     </div>
-                    <div class="glass-card p-5 rounded-2xl space-y-2 border-l-4 border-amber-500">
-                        <p class="text-sm font-bold">صيانة طوارئ الكهرباء</p>
-                        <p class="text-xs text-amber-600 font-mono font-bold">166 أو 0772XXXXXXX</p>
+                </div>
+
+                <!-- 1. خطوات رحلة البلاغ من البداية للنهاية -->
+                <div class="w-full grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+                    <div class="glass-card p-6 sm:p-7 rounded-3xl space-y-3 border-t-4 border-emerald-500 relative overflow-hidden">
+                        <div class="flex items-center justify-between">
+                            <span class="w-11 h-11 rounded-2xl bg-emerald-500/15 text-emerald-600 flex items-center justify-center text-xl font-black">1</span>
+                            <span class="text-2xl">📸</span>
+                        </div>
+                        <h3 class="text-lg font-black">رفع البلاغ وتحليله بالذكاء الاصطناعي</h3>
+                        <p class="text-sm opacity-80 leading-relaxed">يرفع المواطن صورة المشكلة وتقوم خوارزميات الذكاء الاصطناعي بمعاينتها وتصنيف نوع العطل وتقدير درجة خطورته مبدئياً قبل الإرسال.</p>
+                        <p class="text-xs font-bold text-emerald-600 pt-1">المسؤول: المواطن + نظام الذكاء الاصطناعي</p>
                     </div>
-                    <div class="glass-card p-5 rounded-2xl space-y-2 border-l-4 border-rose-500">
-                        <p class="text-sm font-bold text-rose-600">الإسعاف الفوري</p>
-                        <p class="text-xs text-rose-600 font-mono font-bold">122</p>
+
+                    <div class="glass-card p-6 sm:p-7 rounded-3xl space-y-3 border-t-4 border-sky-500 relative overflow-hidden">
+                        <div class="flex items-center justify-between">
+                            <span class="w-11 h-11 rounded-2xl bg-sky-500/15 text-sky-600 flex items-center justify-center text-xl font-black">2</span>
+                            <span class="text-2xl">📍</span>
+                        </div>
+                        <h3 class="text-lg font-black">تحديد الموقع الجغرافي وتوثيق البلاغ</h3>
+                        <p class="text-sm opacity-80 leading-relaxed">يُثبّت موقع المشكلة بدقة عبر GPS أو من الخريطة اليدوية مع ربطه بالتصنيف والوصف والدعم المجتمعي لتكوين ملف بلاغ متكامل.</p>
+                        <p class="text-xs font-bold text-sky-600 pt-1">المسؤول: منظومة التحديد الجغرافي وقاعدة البيانات</p>
+                    </div>
+
+                    <div class="glass-card p-6 sm:p-7 rounded-3xl space-y-3 border-t-4 border-teal-500 relative overflow-hidden">
+                        <div class="flex items-center justify-between">
+                            <span class="w-11 h-11 rounded-2xl bg-teal-500/15 text-teal-600 flex items-center justify-center text-xl font-black">3</span>
+                            <span class="text-2xl">🏛️</span>
+                        </div>
+                        <h3 class="text-lg font-black">التوجيه للجهة المختصة والتنفيذ الميداني</h3>
+                        <p class="text-sm opacity-80 leading-relaxed">يصل البلاغ إلى الجهة الخدمية المعنية بنوع المشكلة لتدقيقه، وتنزيل الكوادر الميدانية لمعالجة العطل وتوثيق حالة التنفيذ.</p>
+                        <p class="text-xs font-bold text-teal-600 pt-1">المسؤول: الجهة الخدمية المختصة والفرق الميدانية</p>
+                    </div>
+
+                    <div class="glass-card p-6 sm:p-7 rounded-3xl space-y-3 border-t-4 border-amber-500 relative overflow-hidden">
+                        <div class="flex items-center justify-between">
+                            <span class="w-11 h-11 rounded-2xl bg-amber-500/15 text-amber-600 flex items-center justify-center text-xl font-black">4</span>
+                            <span class="text-2xl">📊</span>
+                        </div>
+                        <h3 class="text-lg font-black">متابعة الحالة وتوثيق الإنجاز</h3>
+                        <p class="text-sm opacity-80 leading-relaxed">يتابع المواطن تغيّر حالة البلاغ خطوة بخطوة من "بلاغاتي والتصويت" ويطلع على الإحصائيات وصور ما بعد الإصلاح بكل شفافية.</p>
+                        <p class="text-xs font-bold text-amber-600 pt-1">المسؤول: المواطن + بوابة المتابعة والإحصاء</p>
+                    </div>
+                </div>
+
+                <!-- 2. تقدير خطورة البلاغ بالذكاء الاصطناعي (AI Priority Assessment) -->
+                <div class="w-full glass-card rounded-3xl p-6 sm:p-8 space-y-6 border border-emerald-500/30 shadow-xl">
+                    <div class="space-y-1.5 border-b border-emerald-500/20 pb-4">
+                        <span class="px-4 py-1 rounded-full bg-sky-500/10 text-sky-600 text-xs sm:text-sm font-bold">التقييم الذكي الفوري (AI Priority)</span>
+                        <h3 class="text-xl sm:text-2xl font-black">كيف يقدّر الذكاء الاصطناعي درجة خطورة البلاغ؟</h3>
+                        <p class="text-xs sm:text-sm opacity-75">بمجرد رفع صورة العطل، يحللها النموذج الذكي ويصنّف مستوى خطورتها إلى 3 مستويات لتحديد سرعة الاستجابة:</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="p-6 rounded-2xl bg-rose-500/10 border border-rose-500/30 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="px-3.5 py-1 rounded-full bg-rose-600 text-white text-xs sm:text-sm font-black">🔴 أولوية حرجة / عالية</span>
+                                <span class="text-2xl">🚨</span>
+                            </div>
+                            <h4 class="font-black text-base sm:text-lg text-rose-600">تدخل ميداني عاجل</h4>
+                            <p class="text-xs sm:text-sm opacity-85 leading-relaxed">تُمنح للحالات التي تشكّل خطراً مباشراً على السلامة العامة أو تعطل الحركة، مثل الحفر العميقة في الطرق الرئيسية، أعمدة الكهرباء المائلة، أو تسربات المياه الكبيرة.</p>
+                            <p class="text-xs font-bold text-rose-600">الإجراء: إشعار فوري للجهة المختصة ووضع البلاغ في صدارة جدول الفرق.</p>
+                        </div>
+
+                        <div class="p-6 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="px-3.5 py-1 rounded-full bg-amber-500 text-white text-xs sm:text-sm font-black">🟠 أولوية متوسطة</span>
+                                <span class="text-2xl">⚠️</span>
+                            </div>
+                            <h4 class="font-black text-base sm:text-lg text-amber-600">معالجة مجدولة سريعة</h4>
+                            <p class="text-xs sm:text-sm opacity-85 leading-relaxed">تُمنح للأعطال المؤثرة على جودة الخدمات اليومية دون تهديد فوري مباشر، مثل تكدس النفايات المتوسط، أعطال إنارة فرعية، أو تضرر الأرصفة.</p>
+                            <p class="text-xs font-bold text-amber-600">الإجراء: إدراج البلاغ ضمن خطة الصيانة الدورية للقطاع المسؤول.</p>
+                        </div>
+
+                        <div class="p-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="px-3.5 py-1 rounded-full bg-emerald-600 text-white text-xs sm:text-sm font-black">🟢 أولوية اعتيادية / منخفضة</span>
+                                <span class="text-2xl">🛠️</span>
+                            </div>
+                            <h4 class="font-black text-base sm:text-lg text-emerald-600">متابعة وتحسين خدمي</h4>
+                            <p class="text-xs sm:text-sm opacity-85 leading-relaxed">تُمنح للملاحظات البسيطة أو طلبات الصيانة الوقائية والتجميلية التي لا تعيق السير أو الخدمات الأساسية في الحي.</p>
+                            <p class="text-xs font-bold text-emerald-600">الإجراء: توثيق البلاغ ومتابعته حسب الدور الجغرافي للفرق.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. شرح نظام التصويت المجتمعي -->
+                <div class="w-full glass-card rounded-3xl p-6 sm:p-8 space-y-6 border border-amber-500/30 shadow-xl">
+                    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-amber-500/20 pb-4">
+                        <div>
+                            <span class="px-4 py-1 rounded-full bg-amber-500/10 text-amber-600 text-xs sm:text-sm font-bold">المشاركة المجتمعية الذكية</span>
+                            <h3 class="text-xl sm:text-2xl font-black mt-1">كيف تعمل طريقة التصويت المجتمعي (+1 عندي نفس المشكلة)؟</h3>
+                        </div>
+                        <button onclick="switchTab('my-reports')" class="px-5 py-2.5 rounded-xl emerald-btn text-xs sm:text-sm">
+                            انتقل للبلاغات والتصويت 🗳️
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+                        <div class="p-5 rounded-2xl bg-amber-500/5 border border-amber-500/20 space-y-2">
+                            <div class="text-2xl">1️⃣</div>
+                            <h4 class="font-bold text-base">تصفح البلاغات المسجلة</h4>
+                            <p class="text-xs sm:text-sm opacity-80 leading-relaxed">من تبويب <strong>"بلاغاتي والتصويت"</strong> يطلع المواطنون على البلاغات المرفوعة في أحياء المدينة مع صورها ومواقعها.</p>
+                        </div>
+
+                        <div class="p-5 rounded-2xl bg-amber-500/5 border border-amber-500/20 space-y-2">
+                            <div class="text-2xl">2️⃣</div>
+                            <h4 class="font-bold text-base">الضغط على زر التأييد (+1)</h4>
+                            <p class="text-xs sm:text-sm opacity-80 leading-relaxed">بدل تكرار إرسال نفس البلاغ أكثر من مرة، يضغط المواطن المتضرر على زر <strong>"⚠️ عندي نفس المشكلة"</strong> لتسجيل صوته فوراً.</p>
+                        </div>
+
+                        <div class="p-5 rounded-2xl bg-amber-500/5 border border-amber-500/20 space-y-2">
+                            <div class="text-2xl">3️⃣</div>
+                            <h4 class="font-bold text-base">رفع الأولوية تلقائياً</h4>
+                            <p class="text-xs sm:text-sm opacity-80 leading-relaxed">كلما زاد عدد الأصوات على بلاغ معيّن، يرتفع مؤشر التأثير المجتمعي للبلاغ مما ينبّه الجهة المختصة بأن المشكلة تمس عدداً كبيراً من السكان.</p>
+                        </div>
+
+                        <div class="p-5 rounded-2xl bg-amber-500/5 border border-amber-500/20 space-y-2">
+                            <div class="text-2xl">4️⃣</div>
+                            <h4 class="font-bold text-base">منع التكرار وتسريع الحل</h4>
+                            <p class="text-xs sm:text-sm opacity-80 leading-relaxed">تجميع أصوات الحي في بلاغ واحد موثق بالصور والإحداثيات يمنع تشتت الجهود ويسرّع توجيه الآليات للموقع.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. مسؤولية كل جهة حسب نوع المشكلة -->
+                <div class="w-full glass-card rounded-3xl p-6 sm:p-8 space-y-6 border border-emerald-500/30 shadow-xl">
+                    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-emerald-500/20 pb-4">
+                        <div>
+                            <h3 class="text-xl sm:text-2xl font-black">مسؤولية كل جهة حسب طبيعة البلاغ</h3>
+                            <p class="text-xs sm:text-sm opacity-75">توضيح الدور التشغيلي لكل جهة بعد تصنيف المشكلة وتحديد موقعها في المنصة</p>
+                        </div>
+                        <button onclick="switchTab('report')" class="px-5 py-2.5 rounded-xl emerald-btn text-xs sm:text-sm">
+                            رفع بلاغ جديد الآن 🚀
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+                        <div class="p-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 space-y-2.5">
+                            <div class="text-2xl">🛣️</div>
+                            <h4 class="font-bold text-base">قطاع الطرق والبلدية</h4>
+                            <p class="text-xs sm:text-sm opacity-80 leading-relaxed">يستلم بلاغات الحفر والتشققات والأرصفة المتضررة، ويتولى الكشف الميداني، الإكساء، والمعالجة الهندسية للموقع.</p>
+                        </div>
+
+                        <div class="p-5 rounded-2xl bg-sky-500/5 border border-sky-500/20 space-y-2.5">
+                            <div class="text-2xl">💡</div>
+                            <h4 class="font-bold text-base">قطاع الكهرباء والإنارة</h4>
+                            <p class="text-xs sm:text-sm opacity-80 leading-relaxed">يتابع بلاغات أعمدة الإنارة المطفأة أو المتضررة والشبكات المرتبطة بها ويعمل على إعادة الإنارة وتأمين الموقع.</p>
+                        </div>
+
+                        <div class="p-5 rounded-2xl bg-teal-500/5 border border-teal-500/20 space-y-2.5">
+                            <div class="text-2xl">♻️</div>
+                            <h4 class="font-bold text-base">قطاع النفايات والبيئة</h4>
+                            <p class="text-xs sm:text-sm opacity-80 leading-relaxed">يتولى بلاغات تكدس النفايات والنقاط العشوائية، ويوجه آليات الرفع والتنظيف للحفاظ على نظافة الحي وصحة البيئة.</p>
+                        </div>
+
+                        <div class="p-5 rounded-2xl bg-amber-500/5 border border-amber-500/20 space-y-2.5">
+                            <div class="text-2xl">🗂️</div>
+                            <h4 class="font-bold text-base">إدارة البلاغات والمتابعة</h4>
+                            <p class="text-xs sm:text-sm opacity-80 leading-relaxed">تراجع الحالات المصنفة كـ "أخرى" أو ذات الكثافة العالية وتنسق إحالتها للجهة المختصة وتحدّث حالة الإنجاز للمواطن.</p>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -629,31 +872,31 @@
 
     <!-- ==================== MAP MODAL ==================== -->
     <div id="map-modal" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
-        <div class="glass-card max-w-2xl w-full rounded-3xl p-6 shadow-2xl space-y-4 border border-emerald-500/35 relative">
+        <div class="glass-card max-w-4xl w-full rounded-3xl p-6 shadow-2xl space-y-4 border border-emerald-500/35 relative">
             <div class="flex justify-between items-center">
                 <div>
-                    <h3 class="text-base font-black">تحديد موقع العطل الجغرافي 📍</h3>
-                    <p class="text-[11px] opacity-75">حرك الخريطة بحيث يكون الدبوس في منتصف مكان المشكلة تماماً:</p>
+                    <h3 class="text-lg sm:text-xl font-black">تحديد موقع العطل الجغرافي 📍</h3>
+                    <p class="text-xs sm:text-sm opacity-75">حرك الخريطة بحيث يكون الدبوس في منتصف مكان المشكلة تماماً:</p>
                 </div>
-                <button type="button" onclick="closeMapModal()" class="text-rose-600 font-bold text-xs px-3 py-1.5 bg-rose-500/10 rounded-xl hover:bg-rose-500/25 transition-all">إغلاق ✕</button>
+                <button type="button" onclick="closeMapModal()" class="text-rose-600 font-bold text-xs sm:text-sm px-3 py-1.5 bg-rose-500/10 rounded-xl hover:bg-rose-500/25 transition-all">إغلاق ✕</button>
             </div>
             
             <div class="relative w-full h-80 rounded-2xl border border-emerald-500/30 shadow-inner overflow-hidden z-10">
                 <div id="mapbox-container" class="w-full h-full"></div>
                 
                 <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[1000] pointer-events-none flex flex-col items-center">
-                    <div class="bg-emerald-600 text-white font-bold text-[10px] px-2.5 py-1 rounded-full shadow-lg border border-white animate-bounce">
+                    <div class="bg-emerald-600 text-white font-bold text-xs px-3 py-1 rounded-full shadow-lg border border-white animate-bounce">
                         📍 موقع المشكلة هنا
                     </div>
                     <div class="w-4 h-4 bg-emerald-600 rounded-full border-2 border-white shadow-md"></div>
                 </div>
 
-                <button type="button" onclick="goToUserLocation()" class="absolute bottom-4 right-4 z-[1001] bg-white hover:bg-slate-100 text-sky-600 p-3 rounded-2xl shadow-xl border border-sky-300 font-bold text-xs flex items-center gap-1.5 transition-all hover:scale-105">
+                <button type="button" onclick="goToUserLocation()" class="absolute bottom-4 right-4 z-[1001] bg-white hover:bg-slate-100 text-sky-600 p-3 rounded-2xl shadow-xl border border-sky-300 font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-all hover:scale-105">
                     📍 موقعي الحالي
                 </button>
             </div>
             
-            <button type="button" onclick="confirmManualLocation()" class="w-full py-3 rounded-xl emerald-btn text-xs font-bold shadow-md">
+            <button type="button" onclick="confirmManualLocation()" class="w-full py-3.5 rounded-xl emerald-btn text-sm font-bold shadow-md">
                 تأكيد واعتماد هذا الموقع للبلاغ ✓
             </button>
         </div>
@@ -693,6 +936,45 @@
             { name: "البصرة", rx: 0.55, ry: 0.72, color: "#ef4444" }
         ];
 
+        // تحميل صورة الخريطة وتفريغ الخلفية البيضاء لتبقى الحواف شفافة
+        const mapOutlineCanvas = document.createElement('canvas');
+        const mapOutlineCtx = mapOutlineCanvas.getContext('2d');
+        let mapOutlineReady = false;
+
+        const rawMapImg = new Image();
+        rawMapImg.crossOrigin = "anonymous";
+        rawMapImg.src = "خريطه.jpg";
+
+        rawMapImg.onload = function () {
+            mapOutlineCanvas.width = rawMapImg.width;
+            mapOutlineCanvas.height = rawMapImg.height;
+            mapOutlineCtx.clearRect(0, 0, mapOutlineCanvas.width, mapOutlineCanvas.height);
+            mapOutlineCtx.drawImage(rawMapImg, 0, 0);
+
+            const imgData = mapOutlineCtx.getImageData(0, 0, mapOutlineCanvas.width, mapOutlineCanvas.height);
+            const data = imgData.data;
+
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                const brightness = (r + g + b) / 3;
+
+                if (brightness > 225) {
+                    data[i + 3] = 0;
+                } else {
+                    const edgeStrength = Math.min(1, (225 - brightness) / 140);
+                    data[i] = 16;
+                    data[i + 1] = 185;
+                    data[i + 2] = 129;
+                    data[i + 3] = Math.round(edgeStrength * 255);
+                }
+            }
+
+            mapOutlineCtx.putImageData(imgData, 0, 0);
+            mapOutlineReady = true;
+        };
+
         let mouseX = width / 2;
         let mouseY = height / 2;
         window.addEventListener('mousemove', (e) => {
@@ -728,9 +1010,29 @@
             });
             ctx.restore();
 
-            const cx = width * 0.5 + (mouseX - width/2) * 0.03;
-            const cy = height * 0.5 + (mouseY - height/2) * 0.03;
+            const cx = width * 0.5 + (mouseX - width / 2) * 0.03;
+            const cy = height * 0.5 + (mouseY - height / 2) * 0.03;
             const scale = Math.min(width, height) * 0.55;
+
+            if (mapOutlineReady) {
+                const mapPulse = 0.5 + 0.5 * Math.sin(Date.now() * 0.0022);
+                const mapAlpha = 0.12 + mapPulse * 0.52;
+                const drawW = scale * 1.65;
+                const drawH = drawW * (mapOutlineCanvas.height / mapOutlineCanvas.width);
+
+                ctx.save();
+                ctx.globalAlpha = mapAlpha;
+                ctx.shadowBlur = 14 + mapPulse * 24;
+                ctx.shadowColor = '#10b981';
+                ctx.drawImage(
+                    mapOutlineCanvas,
+                    cx - drawW / 2,
+                    cy - drawH / 2,
+                    drawW,
+                    drawH
+                );
+                ctx.restore();
+            }
 
             const govNodes = iraqGovernorates.map(g => ({
                 name: g.name,
@@ -799,6 +1101,18 @@
             }
         }
 
+        function copyEmergencyNumber(num) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(num);
+            }
+            const toast = document.getElementById('copy-number-toast');
+            if (toast) {
+                toast.innerText = `✓ تم نسخ الرقم (${num}) بنجاح`;
+                toast.classList.remove('hidden');
+                setTimeout(() => toast.classList.add('hidden'), 2500);
+            }
+        }
+
         window.onload = function() {
             const savedTheme = localStorage.getItem('civic_theme_dark');
             if (savedTheme === 'true') {
@@ -852,12 +1166,12 @@
             ['home', 'report', 'my-reports', 'stats', 'emergency'].forEach(t => {
                 document.getElementById(`tab-${t}`).classList.add('hidden');
                 const btn = document.getElementById(`nav-${t}`);
-                if(btn) btn.className = "px-4 py-2 rounded-xl text-xs font-semibold transition-all hover:text-emerald-600";
+                if(btn) btn.className = "px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:text-emerald-600";
             });
 
             document.getElementById(`tab-${tabName}`).classList.remove('hidden');
             const activeBtn = document.getElementById(`nav-${tabName}`);
-            if(activeBtn) activeBtn.className = "px-4 py-2 rounded-xl text-xs font-semibold transition-all bg-emerald-600 text-white shadow-md";
+            if(activeBtn) activeBtn.className = "px-5 py-2.5 rounded-xl text-sm font-semibold transition-all bg-emerald-600 text-white shadow-md";
 
             if(tabName === 'my-reports') renderReports();
             if(tabName === 'stats') loadStatsAndHeatmap();
@@ -868,10 +1182,10 @@
         function selectCategory(category, btn) {
             selectedCategoryVal = category;
             document.querySelectorAll('.category-btn').forEach(b => {
-                b.className = "category-btn p-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500 text-center transition-all flex flex-col items-center gap-1 text-xs";
+                b.className = "category-btn p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500 text-center transition-all flex flex-col items-center gap-1.5 text-sm";
             });
             if(btn) {
-                btn.className = "category-btn p-3 rounded-xl border border-emerald-500 bg-emerald-500/20 text-center transition-all flex flex-col items-center gap-1 text-xs font-bold";
+                btn.className = "category-btn p-3.5 rounded-xl border border-emerald-500 bg-emerald-500/20 text-center transition-all flex flex-col items-center gap-1.5 text-sm font-bold";
             }
 
             const otherContainer = document.getElementById('other-desc-container');
@@ -1017,11 +1331,11 @@
                 const data = await response.json();
                 if (data.success) {
                     aiPreviewContent.innerHTML = `
-                        <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div class="grid grid-cols-2 gap-2 text-xs sm:text-sm">
                             <div><span>التصنيف المرصود:</span> <strong class="text-emerald-600 dark:text-emerald-400">${data.category_ar}</strong></div>
                             <div><span>مستوى الخطورة:</span> <strong class="text-amber-600">${data.ai_priority}</strong></div>
                         </div>
-                        <p class="text-[10px] opacity-70 mt-1">✨ تم التحليل المسبق بنجاح وجاهز للإرسال النهائي.</p>
+                        <p class="text-xs sm:text-sm opacity-70 mt-1">✨ تم التحليل المسبق بنجاح وجاهز للإرسال النهائي.</p>
                     `;
                 } else {
                     aiPreviewContent.innerHTML = `<span class="text-rose-500">تعذر تحليل الصورة آلياً.</span>`;
@@ -1126,7 +1440,7 @@
 
         async function renderReports() {
             const listContainer = document.getElementById('reports-list');
-            listContainer.innerHTML = `<div class="col-span-full text-center py-16 glass-card rounded-3xl"><p class="opacity-70 text-sm">جاري مزامنة البلاغات مع غرفة العمليات...</p></div>`;
+            listContainer.innerHTML = `<div class="col-span-full text-center py-16 glass-card rounded-3xl"><p class="opacity-70 text-sm sm:text-base">جاري مزامنة البلاغات مع غرفة العمليات...</p></div>`;
 
             try {
                 const response = await fetch("http://127.0.0.1:8000/api/reports");
@@ -1137,7 +1451,7 @@
                     document.getElementById('reports-count-badge').innerText = `${reports.length} بلاغات نشطة`;
 
                     if (reports.length === 0) {
-                        listContainer.innerHTML = `<div class="col-span-full text-center py-16 glass-card rounded-3xl"><p class="opacity-70 text-sm">لا توجد بلاغات مرسلة حتى الآن. ابدأ بإرسال بلاغك الأول!</p></div>`;
+                        listContainer.innerHTML = `<div class="col-span-full text-center py-16 glass-card rounded-3xl"><p class="opacity-70 text-sm sm:text-base">لا توجد بلاغات مرسلة حتى الآن. ابدأ بإرسال بلاغك الأول!</p></div>`;
                         return;
                     }
 
@@ -1154,14 +1468,14 @@
                         if (rep.after_image_path) {
                             afterImageHtml = `
                                 <div class="mt-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 space-y-2">
-                                    <p class="text-xs font-bold text-emerald-600 dark:text-emerald-400">🎉 معرض قبل وبعد الصيانة والتعمير:</p>
+                                    <p class="text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400">🎉 معرض قبل وبعد الصيانة والتعمير:</p>
                                     <div class="grid grid-cols-2 gap-2">
                                         <div>
-                                            <p class="text-[10px] opacity-75 mb-1">قبل الصيانة:</p>
+                                            <p class="text-xs opacity-75 mb-1">قبل الصيانة:</p>
                                             <img src="http://127.0.0.1:8000${rep.image_path}" class="w-full h-24 rounded-lg object-cover border border-emerald-500/30">
                                         </div>
                                         <div>
-                                            <p class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold mb-1">بعد الإصلاح:</p>
+                                            <p class="text-xs text-emerald-600 dark:text-emerald-400 font-bold mb-1">بعد الإصلاح:</p>
                                             <img src="http://127.0.0.1:8000${rep.after_image_path}" class="w-full h-24 rounded-lg object-cover border border-emerald-500/50 shadow">
                                         </div>
                                     </div>
@@ -1172,24 +1486,24 @@
                         html += `
                             <div class="glass-card rounded-2xl p-5 space-y-3 shadow-xl animate-fade-in border border-emerald-500/20">
                                 <div class="flex justify-between items-center">
-                                    <span class="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-500/30">رقم البلاغ: ${rep.report_no}</span>
-                                    <span class="px-3 py-1 rounded-xl text-xs font-bold border ${statusColor}">${rep.status}</span>
+                                    <span class="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-xs sm:text-sm font-bold border border-emerald-500/30">رقم البلاغ: ${rep.report_no}</span>
+                                    <span class="px-3 py-1 rounded-xl text-xs sm:text-sm font-bold border ${statusColor}">${rep.status}</span>
                                 </div>
                                 <div class="flex gap-4 items-start">
                                     <img src="http://127.0.0.1:8000${rep.image_path}" class="w-24 h-24 rounded-xl object-cover border border-emerald-500/30" onerror="this.src='https://via.placeholder.com/100?text=Report'">
                                     <div class="flex-1 space-y-1">
-                                        <div class="inline-block px-3 py-0.5 rounded-lg bg-sky-500/10 text-sky-700 dark:text-sky-300 text-xs font-black border border-sky-500/30">${rep.category_ar}</div>
-                                        <h4 class="text-xs font-bold">${rep.location || 'كركوك، العراق'}</h4>
-                                        <p class="text-xs opacity-80 leading-relaxed bg-emerald-500/5 p-2 rounded-xl border border-emerald-500/10">تم رصد المشكلة ميدانياً وتوثيقها في النظام الذكي.</p>
-                                        <div class="text-[10px] opacity-65">📅 تاريخ الإرسال: ${rep.date_time}</div>
+                                        <div class="inline-block px-3 py-0.5 rounded-lg bg-sky-500/10 text-sky-700 dark:text-sky-300 text-xs sm:text-sm font-black border border-sky-500/30">${rep.category_ar}</div>
+                                        <h4 class="text-sm font-bold">${rep.location || 'كركوك، العراق'}</h4>
+                                        <p class="text-xs sm:text-sm opacity-80 leading-relaxed bg-emerald-500/5 p-2 rounded-xl border border-emerald-500/10">تم رصد المشكلة ميدانياً وتوثيقها في النظام الذكي.</p>
+                                        <div class="text-xs opacity-65">📅 تاريخ الإرسال: ${rep.date_time}</div>
                                     </div>
                                 </div>
                                 ${afterImageHtml}
                                 
                                 <!-- زر التصويت المجتمعي (Community Upvoting) -->
                                 <div class="flex items-center justify-between mt-3 pt-3 border-t border-emerald-500/20">
-                                    <span class="text-[11px] opacity-75">دعم المجتمع للبلاغ:</span>
-                                    <button onclick="upvoteReport(${rep.id})" class="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 rounded-xl text-xs font-bold transition">
+                                    <span class="text-xs sm:text-sm opacity-75">دعم المجتمع للبلاغ:</span>
+                                    <button onclick="upvoteReport(${rep.id})" class="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 rounded-xl text-xs sm:text-sm font-bold transition">
                                         <span>⚠️ عندي نفس المشكلة</span>
                                         <span id="votes-count-${rep.id}" class="bg-amber-500 text-white px-2 py-0.5 rounded-full">${rep.upvotes || 1}</span>
                                     </button>
