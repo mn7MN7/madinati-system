@@ -11,6 +11,7 @@ import cv2
 import numpy as np
 from ultralytics import YOLO
 import math
+import gdown
 
 app = FastAPI()
 
@@ -75,6 +76,11 @@ def init_db():
 init_db()
 
 MODEL_PATH = "best.pt"
+DRIVE_FILE_ID = "1rqD_EgKL6GacUnpghfO9FLHsbSoACHWO"
+
+if not os.path.exists(MODEL_PATH):
+    print("⏳ جاري تحميل ملف best.pt من Google Drive...")
+    gdown.download(id=DRIVE_FILE_ID, output=MODEL_PATH, quiet=False)
 
 print("\n" + "="*50)
 if os.path.exists(MODEL_PATH):
