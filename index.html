@@ -1327,7 +1327,7 @@
             formData.append("file", file);
 
             try {
-                const response = await fetch("http://127.0.0.1:8000/api/preview", { method: "POST", body: formData });
+                const response = await fetch("/api/preview", { method: "POST", body: formData });
                 const data = await response.json();
                 if (data.success) {
                     aiPreviewContent.innerHTML = `
@@ -1391,7 +1391,7 @@
             successBanner.innerHTML = `<span class="text-2xl">🤖</span><div><p class="font-black">الذكاء الاصطناعي يحلل الصورة ويحدد التصنيف تلقائياً...</p></div>`;
 
             try {
-                const response = await fetch("http://127.0.0.1:8000/api/predict", {
+                const response = await fetch("/api/predict", {
                     method: "POST",
                     body: formData
                 });
@@ -1418,7 +1418,7 @@
 
             } catch (error) {
                 console.error("خطأ في الاتصال بالسيرفر:", error);
-                showFormError("تأكد من تشغيل سيرفر البايثون (python server.py) أولاً!");
+                showFormError("تعذر الاتصال بالسيرفر، حاول مرة أخرى بعد قليل.");
                 successBanner.classList.add('hidden');
             }
         }
@@ -1426,7 +1426,7 @@
         // 🗳️ نظام التصويت المجتمعي (Community Upvoting)
         async function upvoteReport(reportId) {
             try {
-                const response = await fetch(`http://127.0.0.1:8000/api/reports/${reportId}/upvote`, { method: 'POST' });
+                const response = await fetch(`/api/reports/${reportId}/upvote`, { method: 'POST' });
                 const data = await response.json();
                 if (data.success) {
                     const badge = document.getElementById(`votes-count-${reportId}`);
@@ -1443,7 +1443,7 @@
             listContainer.innerHTML = `<div class="col-span-full text-center py-16 glass-card rounded-3xl"><p class="opacity-70 text-sm sm:text-base">جاري مزامنة البلاغات مع غرفة العمليات...</p></div>`;
 
             try {
-                const response = await fetch("http://127.0.0.1:8000/api/reports");
+                const response = await fetch("/api/reports");
                 const data = await response.json();
                 
                 if (data.success && data.reports) {
@@ -1472,11 +1472,11 @@
                                     <div class="grid grid-cols-2 gap-2">
                                         <div>
                                             <p class="text-xs opacity-75 mb-1">قبل الصيانة:</p>
-                                            <img src="http://127.0.0.1:8000${rep.image_path}" class="w-full h-24 rounded-lg object-cover border border-emerald-500/30">
+                                            <img src="${rep.image_path}" class="w-full h-24 rounded-lg object-cover border border-emerald-500/30">
                                         </div>
                                         <div>
                                             <p class="text-xs text-emerald-600 dark:text-emerald-400 font-bold mb-1">بعد الإصلاح:</p>
-                                            <img src="http://127.0.0.1:8000${rep.after_image_path}" class="w-full h-24 rounded-lg object-cover border border-emerald-500/50 shadow">
+                                            <img src="${rep.after_image_path}" class="w-full h-24 rounded-lg object-cover border border-emerald-500/50 shadow">
                                         </div>
                                     </div>
                                 </div>
@@ -1490,7 +1490,7 @@
                                     <span class="px-3 py-1 rounded-xl text-xs sm:text-sm font-bold border ${statusColor}">${rep.status}</span>
                                 </div>
                                 <div class="flex gap-4 items-start">
-                                    <img src="http://127.0.0.1:8000${rep.image_path}" class="w-24 h-24 rounded-xl object-cover border border-emerald-500/30" onerror="this.src='https://via.placeholder.com/100?text=Report'">
+                                    <img src="${rep.image_path}" class="w-24 h-24 rounded-xl object-cover border border-emerald-500/30" onerror="this.src='https://via.placeholder.com/100?text=Report'">
                                     <div class="flex-1 space-y-1">
                                         <div class="inline-block px-3 py-0.5 rounded-lg bg-sky-500/10 text-sky-700 dark:text-sky-300 text-xs sm:text-sm font-black border border-sky-500/30">${rep.category_ar}</div>
                                         <h4 class="text-sm font-bold">${rep.location || 'كركوك، العراق'}</h4>
@@ -1523,7 +1523,7 @@
 
         async function loadStatsAndHeatmap() {
             try {
-                const response = await fetch("http://127.0.0.1:8000/api/reports");
+                const response = await fetch("/api/reports");
                 const data = await response.json();
                 
                 if (data.success && data.reports) {

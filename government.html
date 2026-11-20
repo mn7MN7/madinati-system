@@ -235,7 +235,6 @@
                         <button onclick="filterGovReports('all')" id="filter-all-btn" class="px-3 py-1.5 rounded-xl emerald-btn text-white font-bold transition-all shadow-md">الكل</button>
                         <button onclick="filterGovReports('pending')" id="filter-pending-btn" class="px-3 py-1.5 rounded-xl glass-card-gov hover:opacity-90 transition-all font-semibold">قيد المعالجة</button>
                         <button onclick="filterGovReports('done')" id="filter-done-btn" class="px-3 py-1.5 rounded-xl glass-card-gov hover:opacity-90 transition-all font-semibold">المنجزة والمقبولة</button>
-                        <!-- زر البلاغات الأكثر تضرراً وتصويتاً من المواطنين -->
                         <button onclick="filterGovReports('most_voted')" id="filter-most_voted-btn" class="px-3 py-1.5 rounded-xl glass-card-gov hover:opacity-90 transition-all font-semibold text-amber-600 dark:text-amber-400 border border-amber-500/30">🔥 الأكثر تصويتاً وضرر للمواطنين</button>
                     </div>
 
@@ -257,7 +256,7 @@
             <!-- قائمة البلاغات -->
             <div id="government-reports-list" class="space-y-4">
                 <div class="text-center py-16 glass-card-gov rounded-3xl border border-emerald-500/20 opacity-75 text-sm shadow-xl">
-                    جاري جلب البلاغات من سيرفر البايثون...
+                    جاري جلب البلاغات من السيرفر...
                 </div>
             </div>
         </section>
@@ -306,7 +305,6 @@
 
                     <p class="text-[11px] opacity-75 leading-relaxed">انقر على أي قطاع أدناه لفلترة دبابيس الخريطة فوراً:</p>
 
-                    <!-- أزرار الفلترة الملونة -->
                     <div class="space-y-2.5" id="category-filters-container">
                         <button onclick="setMapCategoryFilter('all')" class="w-full flex items-center justify-between p-3.5 rounded-2xl bg-emerald-600 text-white text-xs font-bold transition-all shadow-md cat-filter-btn" data-cat="all">
                             <span>📂 كافة القطاعات</span>
@@ -406,7 +404,6 @@
                 <div>
                     <label class="block text-xs font-bold text-emerald-600 dark:text-emerald-400 mb-1">صورة الموقع بعد الصيانة والإصلاح 📸:</label>
                     <input type="file" id="after-image-file" accept="image/*" onchange="previewAfterImage(event)" class="w-full dynamic-input border rounded-xl p-2.5 text-xs file:bg-emerald-600 file:text-white file:border-0 file:rounded-lg file:px-3 file:py-1 file:font-bold">
-                    <!-- معاينة الصورة البصرية -->
                     <div id="after-image-preview-container" class="hidden mt-3 text-center">
                         <img id="after-image-preview" class="max-h-36 mx-auto rounded-xl border border-emerald-500/30 object-cover shadow-md">
                     </div>
@@ -438,7 +435,7 @@
         </div>
     </div>
 
-    <!-- إشعار النجاح الاحترافي الفاخر (Toast Notification بدل alert) -->
+    <!-- إشعار النجاح الاحترافي الفاخر -->
     <div id="success-toast-banner" class="fixed top-8 left-1/2 transform -translate-x-1/2 -translate-y-32 opacity-0 transition-all duration-500 z-50 glass-card-gov px-6 py-4 rounded-2xl border border-emerald-500/50 shadow-2xl flex items-center gap-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold">
         <span class="text-2xl">🎉</span>
         <div>
@@ -612,7 +609,7 @@
 
         async function loadGovernmentReports(isManual = false) {
             try {
-                const response = await fetch("http://127.0.0.1:8000/api/reports");
+                const response = await fetch("/api/reports");
                 const data = await response.json();
                 const newReports = data.reports || [];
 
@@ -705,7 +702,6 @@
             } else if (currentFilterType === 'done') {
                 reports = reports.filter(r => r.status && (r.status.includes('قبول') || r.status.includes('منجز') || r.status.includes('🟢') || r.status.includes('✅')));
             } else if (currentFilterType === 'most_voted') {
-                // ترتيب البلاغات من الأكثر تصويتاً إلى الأقل تصويتاً (تضرر المواطنين)
                 reports.sort((a, b) => (b.upvotes || 1) - (a.upvotes || 1));
             }
 
@@ -717,7 +713,6 @@
                 reports = reports.filter(r => ((r.priority_score || 1) === 1) || (r.ai_priority && r.ai_priority.includes('عادية')));
             }
 
-            // الترتيب: إذا لم يكن الفلتر الحالي "الأكثر تصويتاً"، يتم عرض البلاغات الأجدد أولاً (حسب رقم البلاغ/ID تنازلياً)
             if (currentFilterType !== 'most_voted') {
                 reports.sort((a, b) => b.id - a.id);
             }
@@ -763,7 +758,7 @@
             if (r.after_image_path) {
                 afterImagePreviewHtml = `
                     <div class="mt-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-3">
-                        <img src="http://127.0.0.1:8000${r.after_image_path}" class="w-16 h-16 rounded-lg object-cover border border-emerald-500/50 shadow">
+                        <img src="${r.after_image_path}" class="w-16 h-16 rounded-lg object-cover border border-emerald-500/50 shadow">
                         <div>
                             <p class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">🎉 تم إرفاق صورة ما بعد الصيانة (معرض قبل وبعد)</p>
                             <p class="text-[10px] opacity-75">تم تحديث حالة العرض لدى المواطن بنجاح.</p>
@@ -776,7 +771,7 @@
                 <div id="report-card-${r.id}" class="p-6 rounded-2xl glass-card-gov border border-emerald-500/20 shadow-xl space-y-4 animate-fade-in">
                     <div class="flex flex-col md:flex-row gap-6 items-start justify-between">
                         <div class="flex gap-4 items-start">
-                            <img src="http://127.0.0.1:8000${r.image_path}" class="w-24 h-24 rounded-xl object-cover border border-emerald-500/30 shadow-md" onerror="this.src='https://via.placeholder.com/100?text=No+Image'">
+                            <img src="${r.image_path}" class="w-24 h-24 rounded-xl object-cover border border-emerald-500/30 shadow-md" onerror="this.src='https://via.placeholder.com/100?text=No+Image'">
                             <div class="space-y-1.5">
                                 <div class="flex items-center gap-2 flex-wrap">
                                     <span class="px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-mono text-xs font-bold border border-emerald-500/30">${r.report_no}</span>
@@ -924,7 +919,7 @@
             formData.append('note', note);
 
             try {
-                const resp = await fetch(`http://127.0.0.1:8000/api/reports/${id}/complete`, {
+                const resp = await fetch(`/api/reports/${id}/complete`, {
                     method: 'POST',
                     body: formData
                 });
@@ -952,7 +947,7 @@
                 contentHtml += `
                     <div class="p-3 rounded-xl glass-card-gov border border-emerald-500/20 flex items-center justify-between gap-3 shadow-sm">
                         <div class="flex items-center gap-3">
-                            <img src="http://127.0.0.1:8000${rep.image_path}" class="w-14 h-14 rounded-lg object-cover border border-emerald-500/30">
+                            <img src="${rep.image_path}" class="w-14 h-14 rounded-lg object-cover border border-emerald-500/30">
                             <div>
                                 <p class="text-xs font-bold">رقم البلاغ: ${rep.report_no}</p>
                                 <p class="text-[11px] text-emerald-600 dark:text-emerald-400">${rep.category_ar}</p>
@@ -1036,7 +1031,7 @@
             }
 
             try {
-                await fetch(`http://127.0.0.1:8000/api/reports/${id}/status`, {
+                await fetch(`/api/reports/${id}/status`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ status: finalStatusText })
@@ -1073,7 +1068,7 @@
 
         async function loadAnalyticsCharts() {
             try {
-                const resp = await fetch("http://127.0.0.1:8000/api/analytics");
+                const resp = await fetch("/api/analytics");
                 const data = await resp.json();
                 if (data.success) {
                     const stats = data.analytics;
@@ -1198,7 +1193,7 @@
                             </div>
                             <h4 class="font-bold text-xs text-slate-900">${r.category_ar}</h4>
                             <p class="text-[11px] text-slate-600">📅 ${r.date_time}</p>
-                            <img src="http://127.0.0.1:8000${r.image_path}" class="w-full h-24 object-cover rounded-lg border border-slate-200" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
+                            <img src="${r.image_path}" class="w-full h-24 object-cover rounded-lg border border-slate-200" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
                             <button onclick="openGovMap(${lat}, ${lng}, '${r.report_no}', '${r.category_ar}')" class="w-full py-1.5 rounded-lg bg-sky-600 text-white text-xs font-bold text-center shadow-md">
                                 معاينة الموقع بدقة 📍
                             </button>
