@@ -12,7 +12,6 @@ import cv2
 import numpy as np
 from ultralytics import YOLO
 import math
-import gdown
 import urllib.request
 
 app = FastAPI()
@@ -129,33 +128,29 @@ def init_db():
 init_db()
 
 MODEL_PATH = "best.pt"
-DRIVE_FILE_ID = "1rqD_EgKL6GacUnpghfO9FLHsbSoACHWO"
+HF_MODEL_URL = "https://huggingface.co/Mazinmn77/citypulse-yolo/resolve/main/best.pt"
 
-if not os.path.exists(MODEL_PATH):
-    print("⏳ جاري تحميل ملف best.pt من Google Drive...")
-    downloaded = False
+if not os.path.exists(MODEL_PATH) or os.path.getsize(MODEL_PATH) < 1_000_000:
+    print("⏳ جاري تحميل ملف best.pt من Hugging Face...")
     try:
-        res = gdown.download(id=DRIVE_FILE_ID, output=MODEL_PATH, quiet=False, fuzzy=True)
-        if res and os.path.exists(MODEL_PATH) and os.path.getsize(MODEL_PATH) > 10000:
-            downloaded = True
+        if os.path.exists(MODEL_PATH):
+            os.remove(MODEL_PATH)
+        req = urllib.request.Request(
+            HF_MODEL_URL,
+            headers={"User-Agent": "Mozilla/5.0"}
+        )
+        with urllib.request.urlopen(req, timeout=120) as response, open(MODEL_PATH, "wb") as out_file:
+            out_file.write(response.read())
+        print(f"✅ اكتمل التحميل ({os.path.getsize(MODEL_PATH)} bytes)")
     except Exception as e:
-        print("⚠️ تعذر التحميل عبر gdown:", e)
-
-    if not downloaded:
-        try:
-            if os.path.exists(MODEL_PATH):
-                os.remove(MODEL_PATH)
-            fallback_url = f"https://drive.google.com/uc?export=download&id={DRIVE_FILE_ID}&confirm=t"
-            print("⏳ محاولة التحميل البديلة من Google Drive...")
-            urllib.request.urlretrieve(fallback_url, MODEL_PATH)
-        except Exception as e:
-            print("⚠️ تعذر التحميل البديل أيضاً:", e)
+        print("⚠️ تعذر التحميل من Hugging Face:", e)
 
 print("\n" + "="*50)
-if os.path.exists(MODEL_PATH) and os.path.getsize(MODEL_PATH) > 10000:
+if os.path.exists(MODEL_PATH) and os.path.getsize(MODEL_PATH) > 1_000_000:
     unified_model = YOLO(MODEL_PATH)
     print("✅ تم تحميل النموذج الموحد بنجاح!")
 else:
+    unified_model = None
     print("❌ تنبيه: ملف best.pt غير موجود أو غير مكتمل!")
 print("="*50 + "\n")
 
@@ -221,6 +216,9 @@ async def preview_issue(file: UploadFile = File(...)):
     if img is None:
         return {"success": False, "error": "Invalid image file"}
 
+    if unified_model is None:
+        return {"success": False, "error": "Model not loaded"}
+
     results = unified_model.predict(img, conf=0.08, augment=True, verbose=False, device="cpu")
     result = results[0]
     boxes = result.boxes
@@ -269,6 +267,9 @@ async def predict_issue(
     img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
     if img is None:
         return {"success": False, "error": "Invalid image file"}
+
+    if unified_model is None:
+        return {"success": False, "error": "Model not loaded"}
 
     print(f"\n--- 🔍 تحليل الصورة البصري الذكي ({datetime.now().strftime('%H:%M:%S')}) ---")
     
