@@ -6,6 +6,7 @@ from datetime import datetime
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse, FileResponse
 from pydantic import BaseModel
 import cv2
 import numpy as np
@@ -25,6 +26,57 @@ app.add_middleware(
 
 os.makedirs("uploads", exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
+@app.get("/", response_class=HTMLResponse)
+async def hub_page():
+    return """
+    <!DOCTYPE html>
+    <html lang="ar" dir="rtl">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>نبض مدينتي — بوابة الواجهات</title>
+      <style>
+        body { font-family: Tahoma, Arial, sans-serif; background: #0d0d0d; color: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .box { background: #181818; border: 1px solid #2e2e2e; border-radius: 16px; padding: 30px 24px; width: 92%; max-width: 440px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h1 { margin-top: 0; color: #f59e0b; font-size: 24px; }
+        p { color: #bbb; font-size: 14px; margin-bottom: 24px; }
+        a { display: block; text-decoration: none; background: #f59e0b; color: #111; font-weight: bold; padding: 14px; border-radius: 10px; margin-bottom: 12px; font-size: 15px; transition: 0.2s; }
+        a:hover { opacity: 0.9; }
+        a.sec { background: #262626; color: #fff; border: 1px solid #3d3d3d; }
+      </style>
+    </head>
+    <body>
+      <div class="box">
+        <h1>نبض مدينتي — CityPulse AI</h1>
+        <p>اختر الواجهة المطلوبة للمعاينة أو العرض المباشر:</p>
+        <a href="/index.html">الواجهة الرئيسية (index.html)</a>
+        <a class="sec" href="/home.html">واجهة المواطن / البلاغات (home.html)</a>
+        <a class="sec" href="/government.html">لوحة الجهات الحكومية (government.html)</a>
+      </div>
+    </body>
+    </html>
+    """
+
+@app.get("/index.html")
+async def serve_index():
+    return FileResponse("index.html")
+
+@app.get("/home.html")
+async def serve_home():
+    return FileResponse("home.html")
+
+@app.get("/government.html")
+async def serve_government():
+    return FileResponse("government.html")
+
+@app.get("/logo.png")
+async def serve_logo():
+    return FileResponse("logo.png")
+
+@app.get("/Logo-EKG.png")
+async def serve_logo_ekg():
+    return FileResponse("Logo-EKG.png")
 
 def init_db():
     conn = sqlite3.connect("reports.db")
