@@ -13,6 +13,7 @@ import numpy as np
 from ultralytics import YOLO
 import math
 import gdown
+import urllib.request
 
 app = FastAPI()
 
@@ -132,14 +133,30 @@ DRIVE_FILE_ID = "1rqD_EgKL6GacUnpghfO9FLHsbSoACHWO"
 
 if not os.path.exists(MODEL_PATH):
     print("⏳ جاري تحميل ملف best.pt من Google Drive...")
-    gdown.download(id=DRIVE_FILE_ID, output=MODEL_PATH, quiet=False)
+    downloaded = False
+    try:
+        res = gdown.download(id=DRIVE_FILE_ID, output=MODEL_PATH, quiet=False, fuzzy=True)
+        if res and os.path.exists(MODEL_PATH) and os.path.getsize(MODEL_PATH) > 10000:
+            downloaded = True
+    except Exception as e:
+        print("⚠️ تعذر التحميل عبر gdown:", e)
+
+    if not downloaded:
+        try:
+            if os.path.exists(MODEL_PATH):
+                os.remove(MODEL_PATH)
+            fallback_url = f"https://drive.google.com/uc?export=download&id={DRIVE_FILE_ID}&confirm=t"
+            print("⏳ محاولة التحميل البديلة من Google Drive...")
+            urllib.request.urlretrieve(fallback_url, MODEL_PATH)
+        except Exception as e:
+            print("⚠️ تعذر التحميل البديل أيضاً:", e)
 
 print("\n" + "="*50)
-if os.path.exists(MODEL_PATH):
+if os.path.exists(MODEL_PATH) and os.path.getsize(MODEL_PATH) > 10000:
     unified_model = YOLO(MODEL_PATH)
     print("✅ تم تحميل النموذج الموحد بنجاح!")
 else:
-    print("❌ تنبيه: ملف best.pt غير موجود!")
+    print("❌ تنبيه: ملف best.pt غير موجود أو غير مكتمل!")
 print("="*50 + "\n")
 
 # دالة حساب المسافة الحقيقية بالأمتار بين إحداثيات اثنين (Haversine Formula)
