@@ -227,7 +227,7 @@
                 </div>
             </div>
 
-            <!-- شريط الفلترة والأزرار المتقدمة (حالة وأولوية الذكاء الاصطناعي والتصويت المجتمعي) -->
+            <!-- شريط الفلترة والأزرار المتقدمة -->
             <div class="flex flex-col gap-3 glass-card-gov p-4 rounded-2xl border border-emerald-500/20 shadow-lg">
                 <div class="flex flex-wrap items-center justify-between gap-4">
                     <div class="flex flex-wrap gap-2 text-xs items-center">
@@ -243,7 +243,7 @@
                     </button>
                 </div>
 
-                <!-- فلاتر أولوية الذكاء الاصطناعي (عادية، متوسطة، حرجة) -->
+                <!-- فلاتر أولوية الذكاء الاصطناعي -->
                 <div class="flex flex-wrap gap-2 text-xs items-center pt-2 border-t border-emerald-500/10">
                     <span class="font-bold text-emerald-600 dark:text-emerald-400 ml-1">أولوية الذكاء الاصطناعي:</span>
                     <button onclick="filterPriorityReports('all')" id="priority-all-btn" class="px-3 py-1.5 rounded-xl bg-emerald-600 text-white font-bold transition-all shadow-md">كافة الأولويات</button>
@@ -365,7 +365,7 @@
         </div>
     </div>
 
-    <!-- نافذة البلاغات المشابهة (Smart Similar Reports Modal) -->
+    <!-- نافذة البلاغات المشابهة -->
     <div id="similar-reports-modal" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
         <div class="glass-card-gov max-w-xl w-full rounded-3xl p-6 shadow-2xl space-y-4 border border-amber-500/40 relative">
             <div class="flex justify-between items-center border-b border-emerald-500/20 pb-3">
@@ -388,7 +388,7 @@
         </div>
     </div>
 
-    <!-- نافذة إنجاز البلاغ ورفع صورة بعد الصيانة (معرض قبل وبعد) -->
+    <!-- نافذة إنجاز البلاغ ورفع صورة بعد الصيانة -->
     <div id="complete-report-modal" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
         <div class="glass-card-gov max-w-lg w-full rounded-3xl p-6 shadow-2xl space-y-4 border border-emerald-500/40 relative">
             <div class="flex justify-between items-center border-b border-emerald-500/20 pb-3">
@@ -435,7 +435,7 @@
         </div>
     </div>
 
-    <!-- إشعار النجاح الاحترافي الفاخر -->
+    <!-- إشعار النجاح -->
     <div id="success-toast-banner" class="fixed top-8 left-1/2 transform -translate-x-1/2 -translate-y-32 opacity-0 transition-all duration-500 z-50 glass-card-gov px-6 py-4 rounded-2xl border border-emerald-500/50 shadow-2xl flex items-center gap-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold">
         <span class="text-2xl">🎉</span>
         <div>
@@ -446,6 +446,8 @@
 
     <!-- JavaScript Logic -->
     <script>
+        const API_BASE_URL = "http://127.0.0.1:8000";
+
         mapboxgl.accessToken = 'pk.eyJ1IjoibWF6aW5tYXppbjM0MiIsImEiOiJjbXc0b3E1c2YwOGQyMnpzaTdiZ24zOHM2In0.DAfH3kMEpvIqmqLRwgcrwg';
 
         const canvas = document.getElementById('bg-canvas');
@@ -538,6 +540,14 @@
         let govMarker = null;
         let isInitialLoad = true;
 
+        function resolveImageUrl(path) {
+            if (!path) return 'https://via.placeholder.com/100?text=No+Image';
+            if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) {
+                return path;
+            }
+            return `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
+        }
+
         function matchesCategory(catText, filterType) {
             if (!catText) return false;
             catText = catText.toLowerCase();
@@ -609,7 +619,7 @@
 
         async function loadGovernmentReports(isManual = false) {
             try {
-                const response = await fetch("/api/reports");
+                const response = await fetch(`${API_BASE_URL}/api/reports`);
                 const data = await response.json();
                 const newReports = data.reports || [];
 
@@ -630,6 +640,12 @@
                 }
             } catch (e) {
                 console.error("خطأ في جلب البلاغات:", e);
+                if (isInitialLoad) {
+                    const listContainer = document.getElementById('government-reports-list');
+                    if (listContainer) {
+                        listContainer.innerHTML = `<div class="text-center py-16 glass-card-gov rounded-3xl border border-rose-500/30 text-rose-600 text-sm font-bold shadow-xl">⚠️ تعذر الاتصال بالسيرفر المحلي (${API_BASE_URL}) — تأكد من تشغيل أمر: py -3.11 server.py</div>`;
+                    }
+                }
             }
         }
 
@@ -758,7 +774,7 @@
             if (r.after_image_path) {
                 afterImagePreviewHtml = `
                     <div class="mt-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-3">
-                        <img src="${r.after_image_path}" class="w-16 h-16 rounded-lg object-cover border border-emerald-500/50 shadow">
+                        <img src="${resolveImageUrl(r.after_image_path)}" class="w-16 h-16 rounded-lg object-cover border border-emerald-500/50 shadow">
                         <div>
                             <p class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">🎉 تم إرفاق صورة ما بعد الصيانة (معرض قبل وبعد)</p>
                             <p class="text-[10px] opacity-75">تم تحديث حالة العرض لدى المواطن بنجاح.</p>
@@ -771,7 +787,7 @@
                 <div id="report-card-${r.id}" class="p-6 rounded-2xl glass-card-gov border border-emerald-500/20 shadow-xl space-y-4 animate-fade-in">
                     <div class="flex flex-col md:flex-row gap-6 items-start justify-between">
                         <div class="flex gap-4 items-start">
-                            <img src="${r.image_path}" class="w-24 h-24 rounded-xl object-cover border border-emerald-500/30 shadow-md" onerror="this.src='https://via.placeholder.com/100?text=No+Image'">
+                            <img src="${resolveImageUrl(r.image_path)}" class="w-24 h-24 rounded-xl object-cover border border-emerald-500/30 shadow-md" onerror="this.src='https://via.placeholder.com/100?text=No+Image'">
                             <div class="space-y-1.5">
                                 <div class="flex items-center gap-2 flex-wrap">
                                     <span class="px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-mono text-xs font-bold border border-emerald-500/30">${r.report_no}</span>
@@ -826,7 +842,7 @@
             const listContainer = document.getElementById('government-reports-list');
             if (!listContainer) return;
 
-            if (listContainer.innerHTML.includes('جاري جلب البلاغات') || listContainer.innerHTML.includes('لا توجد بلاغات')) {
+            if (listContainer.innerHTML.includes('جاري جلب البلاغات') || listContainer.innerHTML.includes('لا توجد بلاغات') || listContainer.innerHTML.includes('تعذر الاتصال')) {
                 listContainer.innerHTML = '';
             }
 
@@ -919,7 +935,7 @@
             formData.append('note', note);
 
             try {
-                const resp = await fetch(`/api/reports/${id}/complete`, {
+                const resp = await fetch(`${API_BASE_URL}/api/reports/${id}/complete`, {
                     method: 'POST',
                     body: formData
                 });
@@ -947,7 +963,7 @@
                 contentHtml += `
                     <div class="p-3 rounded-xl glass-card-gov border border-emerald-500/20 flex items-center justify-between gap-3 shadow-sm">
                         <div class="flex items-center gap-3">
-                            <img src="${rep.image_path}" class="w-14 h-14 rounded-lg object-cover border border-emerald-500/30">
+                            <img src="${resolveImageUrl(rep.image_path)}" class="w-14 h-14 rounded-lg object-cover border border-emerald-500/30">
                             <div>
                                 <p class="text-xs font-bold">رقم البلاغ: ${rep.report_no}</p>
                                 <p class="text-[11px] text-emerald-600 dark:text-emerald-400">${rep.category_ar}</p>
@@ -1031,7 +1047,7 @@
             }
 
             try {
-                await fetch(`/api/reports/${id}/status`, {
+                await fetch(`${API_BASE_URL}/api/reports/${id}/status`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ status: finalStatusText })
@@ -1068,7 +1084,7 @@
 
         async function loadAnalyticsCharts() {
             try {
-                const resp = await fetch("/api/analytics");
+                const resp = await fetch(`${API_BASE_URL}/api/analytics`);
                 const data = await resp.json();
                 if (data.success) {
                     const stats = data.analytics;
@@ -1193,7 +1209,7 @@
                             </div>
                             <h4 class="font-bold text-xs text-slate-900">${r.category_ar}</h4>
                             <p class="text-[11px] text-slate-600">📅 ${r.date_time}</p>
-                            <img src="${r.image_path}" class="w-full h-24 object-cover rounded-lg border border-slate-200" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
+                            <img src="${resolveImageUrl(r.image_path)}" class="w-full h-24 object-cover rounded-lg border border-slate-200" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
                             <button onclick="openGovMap(${lat}, ${lng}, '${r.report_no}', '${r.category_ar}')" class="w-full py-1.5 rounded-lg bg-sky-600 text-white text-xs font-bold text-center shadow-md">
                                 معاينة الموقع بدقة 📍
                             </button>
